@@ -1,0 +1,306 @@
+<div class="dashboard-page-container">
+
+  <!-- Top Hero Header -->
+  <div class="dashboard-header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <span>DD Finserve</span>
+        <mat-icon class="bc-arrow">chevron_right</mat-icon>
+        <span class="bc-current">Executive Dashboard</span>
+      </div>
+      <h1 class="page-title">EMI Collection & Portfolio Dashboard</h1>
+    </div>
+
+    <div class="header-right">
+      <div class="today-date-badge">
+        <mat-icon class="date-icon">calendar_today</mat-icon>
+        <span>{{ currentDate | date:'fullDate' }}</span>
+      </div>
+
+      <button mat-stroked-button class="action-btn-outline" (click)="loadMetrics()" title="Refresh live metrics">
+        <mat-icon>refresh</mat-icon>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SECTION 1: 5 Core KPI Metric Cards -->
+  <div class="kpi-grid">
+
+    <!-- KPI 1: Total Number of Customers -->
+    <div class="kpi-card card-customers" (click)="navigateToCustomers()">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Customers</span>
+        <div class="kpi-icon-box bg-blue">
+          <mat-icon>groups</mat-icon>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value">{{ metrics.totalCustomers }}</span>
+        <span class="kpi-unit">Borrowers</span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-badge badge-blue">{{ metrics.activeLoansCount }} Active</span>
+        <span class="kpi-subtext">{{ metrics.completedLoansCount }} Completed</span>
+      </div>
+    </div>
+
+    <!-- KPI 2: Today's Total EMI -->
+    <div class="kpi-card card-total-emi">
+      <div class="kpi-top">
+        <span class="kpi-label">Today's Total EMI</span>
+        <div class="kpi-icon-box bg-indigo">
+          <mat-icon>event_note</mat-icon>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value">₹{{ metrics.todaysTotalEmi | number }}</span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-badge badge-indigo">Scheduled Today</span>
+        <span class="kpi-subtext">Active daily installments</span>
+      </div>
+    </div>
+
+    <!-- KPI 3: Today's Received -->
+    <div class="kpi-card card-received">
+      <div class="kpi-top">
+        <span class="kpi-label">Today's Received</span>
+        <div class="kpi-icon-box bg-emerald">
+          <mat-icon>payments</mat-icon>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value text-emerald">₹{{ metrics.todaysReceived | number }}</span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-badge badge-emerald">{{ metrics.efficiencyPercentage }}% Collected</span>
+        <span class="kpi-subtext">Collected to date</span>
+      </div>
+    </div>
+
+    <!-- KPI 4: Pending EMI -->
+    <div class="kpi-card card-pending">
+      <div class="kpi-top">
+        <span class="kpi-label">Pending EMI</span>
+        <div class="kpi-icon-box bg-amber">
+          <mat-icon>hourglass_bottom</mat-icon>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value text-amber">₹{{ metrics.pendingEmi | number }}</span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-badge badge-amber">Remaining</span>
+        <span class="kpi-subtext">Due before EOD</span>
+      </div>
+    </div>
+
+    <!-- KPI 5: Overdue Customers -->
+    <div class="kpi-card card-overdue" (click)="navigateToCustomers('Overdue')">
+      <div class="kpi-top">
+        <span class="kpi-label">Overdue Customers</span>
+        <div class="kpi-icon-box bg-rose">
+          <mat-icon>report_problem</mat-icon>
+        </div>
+      </div>
+      <div class="kpi-value-row">
+        <span class="kpi-value text-rose">{{ metrics.overdueCustomers }}</span>
+        <span class="kpi-unit">Accounts</span>
+      </div>
+      <div class="kpi-footer">
+        <span class="kpi-badge badge-rose">{{ metrics.overdueCustomers > 0 ? 'Action Required' : 'All Clear' }}</span>
+        <span class="kpi-subtext">Click to view overdue</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 2: Analytics & Insights Row -->
+  <div class="insights-grid">
+
+    <!-- Card A: Today's Collection Progress Tracker -->
+    <div class="insight-card tracker-card">
+      <div class="insight-card-header">
+        <div class="header-icon-title">
+          <mat-icon class="card-header-icon text-indigo">speed</mat-icon>
+          <h2 class="card-title">Today's Collection Progress</h2>
+        </div>
+        <span class="efficiency-pill">{{ metrics.efficiencyPercentage }}% Achieved</span>
+      </div>
+
+      <div class="tracker-body">
+        <div class="progress-bar-wrapper">
+          <div class="progress-track">
+            <div class="progress-fill" [style.width.%]="metrics.efficiencyPercentage"></div>
+          </div>
+        </div>
+
+        <div class="tracker-metrics-grid">
+          <div class="tracker-col">
+            <span class="trk-label">Scheduled Target</span>
+            <strong class="trk-val">₹{{ metrics.todaysTotalEmi | number }}</strong>
+          </div>
+          <div class="tracker-col">
+            <span class="trk-label">Received Amount</span>
+            <strong class="trk-val text-emerald">₹{{ metrics.todaysReceived | number }}</strong>
+          </div>
+          <div class="tracker-col">
+            <span class="trk-label">Pending Target</span>
+            <strong class="trk-val text-amber">₹{{ metrics.pendingEmi | number }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card B: EMI Frequency / Plan Distribution -->
+    <div class="insight-card distribution-card">
+      <div class="insight-card-header">
+        <div class="header-icon-title">
+          <mat-icon class="card-header-icon text-blue">pie_chart</mat-icon>
+          <h2 class="card-title">Collection Frequency Mix</h2>
+        </div>
+        <span class="card-subtitle-badge">Active Plans</span>
+      </div>
+
+      <div class="plans-list">
+        <!-- Daily Plan -->
+        <div class="plan-item">
+          <div class="plan-info">
+            <div class="plan-badge-box badge-daily">
+              <mat-icon>today</mat-icon>
+              <span>Daily Collection</span>
+            </div>
+            <span class="plan-count">{{ metrics.planStats?.daily || 0 }} Borrowers</span>
+          </div>
+          <div class="plan-bar-wrapper">
+            <div
+              class="plan-bar bar-daily"
+              [style.width.%]="metrics.totalCustomers ? ((metrics.planStats?.daily || 0) / metrics.totalCustomers) * 100 : 0"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Weekly Plan -->
+        <div class="plan-item">
+          <div class="plan-info">
+            <div class="plan-badge-box badge-weekly">
+              <mat-icon>date_range</mat-icon>
+              <span>Weekly Collection</span>
+            </div>
+            <span class="plan-count">{{ metrics.planStats?.weekly || 0 }} Borrowers</span>
+          </div>
+          <div class="plan-bar-wrapper">
+            <div
+              class="plan-bar bar-weekly"
+              [style.width.%]="metrics.totalCustomers ? ((metrics.planStats?.weekly || 0) / metrics.totalCustomers) * 100 : 0"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Monthly Plan -->
+        <div class="plan-item">
+          <div class="plan-info">
+            <div class="plan-badge-box badge-monthly">
+              <mat-icon>calendar_month</mat-icon>
+              <span>Monthly Collection</span>
+            </div>
+            <span class="plan-count">{{ metrics.planStats?.monthly || 0 }} Borrowers</span>
+          </div>
+          <div class="plan-bar-wrapper">
+            <div
+              class="plan-bar bar-monthly"
+              [style.width.%]="metrics.totalCustomers ? ((metrics.planStats?.monthly || 0) / metrics.totalCustomers) * 100 : 0"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECTION 3: Portfolio Capital Health & Quick Shortcuts -->
+  <div class="portfolio-health-grid">
+
+    <!-- Capital Overview Card -->
+    <div class="insight-card capital-card">
+      <div class="insight-card-header">
+        <div class="header-icon-title">
+          <mat-icon class="card-header-icon text-emerald">account_balance</mat-icon>
+          <h2 class="card-title">Loan Portfolio Capital Overview</h2>
+        </div>
+        <span class="card-subtitle-badge">Total Balance</span>
+      </div>
+
+      <div class="capital-metrics-row">
+        <div class="capital-stat-box">
+          <span class="cap-lbl">Total Capital Disbursed</span>
+          <strong class="cap-val text-blue">₹{{ metrics.totalDisbursed | number }}</strong>
+          <span class="cap-sub">Principal loan portfolio</span>
+        </div>
+
+        <div class="capital-stat-box">
+          <span class="cap-lbl">Total Collected to Date</span>
+          <strong class="cap-val text-emerald">₹{{ metrics.totalCollected | number }}</strong>
+          <span class="cap-sub">Recovered capital & profit</span>
+        </div>
+
+        <div class="capital-stat-box">
+          <span class="cap-lbl">Outstanding Balance</span>
+          <strong class="cap-val text-amber">₹{{ metrics.totalOutstanding | number }}</strong>
+          <span class="cap-sub">Remaining balance to collect</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Center Card -->
+    <div class="insight-card shortcuts-card">
+      <div class="insight-card-header">
+        <div class="header-icon-title">
+          <mat-icon class="card-header-icon text-indigo">hub</mat-icon>
+          <h2 class="card-title">Quick Actions & Directory</h2>
+        </div>
+      </div>
+
+      <div class="shortcuts-actions">
+        <button mat-flat-button class="shortcut-btn btn-browse" (click)="navigateToCalculator()">
+          <mat-icon>calculate</mat-icon>
+          <div class="btn-text-group">
+            <span class="btn-primary-text">EMI Calculator & Customer Consultation</span>
+            <span class="btn-sec-text">Calculate & explain daily, weekly, or monthly repayments</span>
+          </div>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </button>
+
+        <button mat-flat-button class="shortcut-btn btn-browse" (click)="navigateToCustomers()">
+          <mat-icon>format_list_bulleted</mat-icon>
+          <div class="btn-text-group">
+            <span class="btn-primary-text">View Borrower Directory</span>
+            <span class="btn-sec-text">Access 12-column customer table & KYC records</span>
+          </div>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </button>
+
+        <button mat-flat-button class="shortcut-btn btn-overdue" (click)="navigateToCustomers('Overdue')">
+          <mat-icon>warning</mat-icon>
+          <div class="btn-text-group">
+            <span class="btn-primary-text">Filter Overdue Accounts ({{ metrics.overdueCustomers }})</span>
+            <span class="btn-sec-text">View borrowers requiring field agent collection</span>
+          </div>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </button>
+
+        <button mat-flat-button class="shortcut-btn btn-new" (click)="openAddCustomerDialog()">
+          <mat-icon>person_add</mat-icon>
+          <div class="btn-text-group">
+            <span class="btn-primary-text">Onboard New Customer</span>
+            <span class="btn-sec-text">Disburse loan with Daily, Weekly, or Monthly EMI</span>
+          </div>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>

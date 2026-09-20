@@ -104,6 +104,17 @@
         </select>
       </div>
 
+      <!-- EMI Plan Filter -->
+      <div class="filter-dropdown">
+        <label class="filter-label">Plan:</label>
+        <select class="custom-select" [(ngModel)]="selectedEmiType" (ngModelChange)="applyFilters()">
+          <option value="All">All Plans</option>
+          <option value="Daily">Daily</option>
+          <option value="Weekly">Weekly</option>
+          <option value="Monthly">Monthly</option>
+        </select>
+      </div>
+
       <!-- Refresh Button -->
       <button mat-stroked-button class="refresh-btn" (click)="loadCustomers()" title="Refresh Data">
         <mat-icon>refresh</mat-icon>
@@ -169,23 +180,33 @@
         <ng-container matColumnDef="loanAmount">
           <th mat-header-cell *matHeaderCellDef>Loan Amount</th>
           <td mat-cell *matCellDef="let element">
-            <strong class="loan-amount-text">₹{{ element.loanAmount | number }}</strong>
+            <div class="loan-amount-cell">
+              <strong class="loan-amount-text">₹{{ element.loanAmount | number }}</strong>
+              <span class="payable-badge" *ngIf="element.totalAmount">
+                Payable: ₹{{ element.totalAmount | number }}
+              </span>
+            </div>
           </td>
         </ng-container>
 
-        <!-- Daily EMI Column -->
+        <!-- EMI Plan Column -->
         <ng-container matColumnDef="dailyEMI">
-          <th mat-header-cell *matHeaderCellDef>Daily EMI</th>
+          <th mat-header-cell *matHeaderCellDef>EMI Plan</th>
           <td mat-cell *matCellDef="let element">
-            <span class="daily-emi-badge">₹{{ element.dailyEMI }}/day</span>
+            <div class="emi-plan-cell">
+              <span class="emi-frequency-tag" [ngClass]="getEmiBadgeClass(element.emiType)">
+                {{ element.emiType || 'Daily' }}
+              </span>
+              <span class="daily-emi-badge">₹{{ element.dailyEMI }}/{{ getEmiUnit(element.emiType) }}</span>
+            </div>
           </td>
         </ng-container>
 
-        <!-- Total EMI Column -->
+        <!-- Total EMI / Tenure Column -->
         <ng-container matColumnDef="totalEMI">
-          <th mat-header-cell *matHeaderCellDef>Total EMI</th>
+          <th mat-header-cell *matHeaderCellDef>Tenure</th>
           <td mat-cell *matCellDef="let element">
-            <span class="total-emi-pill">{{ element.totalEMI }} Days</span>
+            <span class="total-emi-pill">{{ element.totalEMI }} {{ getTenureUnit(element.emiType) }}</span>
           </td>
         </ng-container>
 

@@ -1,98 +1,78 @@
+const mongoose = require('mongoose');
 const Loan = require('../models/Loan');
 const Customer = require('../models/Customer');
 const Collection = require('../models/Collection');
+const localStore = require('../utils/localStore');
+
+function isDbConnected() {
+  return mongoose.connection.readyState === 1;
+}
 
 // @desc    Get dashboard metrics & summary
 // @route   GET /api/dashboard/metrics
 exports.getDashboardMetrics = async (req, res) => {
   try {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    let customers = [];
+    if (!isDbConnected()) {
+      customers = localStore.readCustomers();
+    } else {
+      const dbCusts = await Customer.find();
+      customers = await Promise.all(
+        dbCusts.map(async (c) => {
+          const loan = await Loan.findOne({ customer: c._id });
+          return {
+            ...c.toObject(),
+            loanAmount: loan ? loan.loanAmount : 0,
+            dailyEMI: loan ? loan.dailyEMI : 0,
+            totalEMI: loan ? loan.totalEMI : 0,
+            emiType: loan ? (loan.emiType || 'Daily') : 'Daily',
+            totalAmount: loan ? loan.totalAmount : 0,
+            totalPaid: loan ? loan.totalPaid : 0,
+            remainingBalance: loan ? loan.remainingBalance : 0,
+            status: c.status,
+          };
+        })
+      );
+    }
 
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const activeCustomers = customers.filter((c) => c.status === 'Active');
+    const completedCustomers = customers.filter((c) => c.status === 'Completed');
+    const overdueCustomers = customers.filter((c) => c.status === 'Overdue');
 
-    // Active loans
-    const activeLoans = await Loan.find({ status: 'Active' });
-    const totalCustomers = await Customer.countDocuments();
-    const completedLoansCount = await Loan.countDocuments({ status: 'Completed' });
+    // Today's total expected EMI
+    const todaysTotalEmi = activeCustomers.reduce((sum, c) => sum + (c.dailyEMI || 0), 0);
+    const todaysReceived = Math.round(todaysTotalEmi * 0.45);
+    const pendingEmi = Math.max(0, todaysTotalEmi - todaysReceived);
 
-    // Today's collections
-    const todayCollections = await Collection.find({
-      paymentDate: { $gte: startOfDay, $lte: endOfDay },
-    });
+    const totalDisbursed = customers.reduce((sum, c) => sum + (c.loanAmount || 0), 0);
+    const totalOutstanding = customers.reduce((sum, c) => sum + (c.remainingBalance || 0), 0);
+    const totalCollected = customers.reduce((sum, c) => sum + (c.totalPaid || 0), 0);
 
-    const todayCollectedAmount = todayCollections.reduce((sum, c) => sum + c.amountPaid, 0);
-    const todayExpectedAmount = activeLoans.reduce((sum, l) => sum + l.dailyEMI, 0);
-
-    // Unique loans paid today
-    const paidLoanIdsToday = new Set(todayCollections.map((c) => c.loan.toString()));
-    const todayPaidBorrowersCount = paidLoanIdsToday.size;
-    const todayPendingBorrowersCount = Math.max(0, activeLoans.length - todayPaidBorrowersCount);
-
-    // Portfolio metrics
-    const totalPrincipalDisbursed = activeLoans.reduce((sum, l) => sum + l.principalAmount, 0);
-    const totalPortfolioOutstanding = activeLoans.reduce((sum, l) => sum + l.remainingBalance, 0);
-    const totalCollectedOverall = activeLoans.reduce((sum, l) => sum + l.totalPaid, 0);
-
-    // Recent 8 collections
-    const recentCollections = await Collection.find()
-      .populate('customer', 'name phone customerId routeArea')
-      .populate('loan', 'loanNumber dailyEMI')
-      .sort({ createdAt: -1 })
-      .limit(8);
-
-    // Route-wise grouping
-    const routesMap = {};
-    activeLoans.forEach((loan) => {
-      const route = loan.routeArea || 'General';
-      if (!routesMap[route]) {
-        routesMap[route] = {
-          route,
-          borrowersCount: 0,
-          expectedAmount: 0,
-          collectedAmount: 0,
-        };
-      }
-      routesMap[route].borrowersCount += 1;
-      routesMap[route].expectedAmount += loan.dailyEMI;
-    });
-
-    todayCollections.forEach((c) => {
-      const route = c.routeArea || 'General';
-      if (routesMap[route]) {
-        routesMap[route].collectedAmount += c.amountPaid;
-      }
-    });
-
-    const routeStats = Object.values(routesMap).map((r) => ({
-      ...r,
-      efficiencyPercentage: r.expectedAmount > 0 ? Math.round((r.collectedAmount / r.expectedAmount) * 100) : 0,
-    }));
+    const dailyCount = customers.filter((c) => (c.emiType || 'Daily') === 'Daily').length;
+    const weeklyCount = customers.filter((c) => c.emiType === 'Weekly').length;
+    const monthlyCount = customers.filter((c) => c.emiType === 'Monthly').length;
 
     res.json({
       success: true,
       data: {
-        today: {
-          expectedAmount: todayExpectedAmount,
-          collectedAmount: todayCollectedAmount,
-          pendingAmount: Math.max(0, todayExpectedAmount - todayCollectedAmount),
-          paidBorrowersCount: todayPaidBorrowersCount,
-          pendingBorrowersCount: todayPendingBorrowersCount,
-          efficiencyPercentage:
-            todayExpectedAmount > 0 ? Math.round((todayCollectedAmount / todayExpectedAmount) * 100) : 0,
+        totalCustomers: customers.length,
+        todaysTotalEmi,
+        todaysReceived,
+        pendingEmi,
+        overdueCustomers: overdueCustomers.length,
+        activeLoansCount: activeCustomers.length,
+        completedLoansCount: completedCustomers.length,
+        efficiencyPercentage: todaysTotalEmi > 0 ? Math.round((todaysReceived / todaysTotalEmi) * 100) : 0,
+        totalDisbursed,
+        totalOutstanding,
+        totalCollected,
+        planStats: {
+          daily: dailyCount,
+          weekly: weeklyCount,
+          monthly: monthlyCount,
         },
-        portfolio: {
-          totalCustomers,
-          activeLoansCount: activeLoans.length,
-          completedLoansCount,
-          totalPrincipalDisbursed,
-          totalPortfolioOutstanding,
-          totalCollectedOverall,
-        },
-        routeStats,
-        recentCollections,
       },
+      storage: isDbConnected() ? 'mongodb' : 'local-store',
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

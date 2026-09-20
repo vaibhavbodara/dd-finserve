@@ -1,0 +1,162 @@
+<div class="login-wrapper">
+
+  <!-- Background Animated Glow Accents -->
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
+  <div class="login-container">
+
+    <!-- Card Top Brand Banner -->
+    <div class="login-brand-header">
+      <div class="brand-logo-box">
+        <svg class="brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="loginShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1e3a8a" />
+              <stop offset="50%" stop-color="#2563eb" />
+              <stop offset="100%" stop-color="#059669" />
+            </linearGradient>
+            <linearGradient id="loginGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#fbbf24" />
+              <stop offset="50%" stop-color="#f59e0b" />
+            </linearGradient>
+          </defs>
+          <polygon points="50,6 90,26 90,74 50,94 10,74 10,26" fill="url(#loginShieldGrad)" rx="8" />
+          <polygon points="50,11 85,28 85,72 50,89 15,72 15,28" fill="#0f172a" />
+          <path d="M30 30 H 45 C 56 30 62 36 62 46 C 62 56 56 62 45 62 H 30 Z" fill="none" stroke="url(#loginGoldGrad)" stroke-width="4.5" stroke-linecap="round" />
+          <path d="M48 36 H 58 C 67 36 72 41 72 50 C 72 59 67 64 58 64 H 48" fill="none" stroke="#60a5fa" stroke-width="4" stroke-linecap="round" />
+          <polyline points="40,55 52,43 64,48 76,34" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <polygon points="73,34 76,34 76,37" fill="#34d399" />
+        </svg>
+      </div>
+
+      <div class="brand-titles">
+        <h1 class="brand-title"><span class="brand-highlight">DD</span> FINSERVE</h1>
+      </div>
+    </div>
+
+    <!-- Login Form Card -->
+    <div class="login-card">
+
+      <div class="login-welcome">
+        <h2 class="welcome-heading">Sign In to Portal</h2>
+        <p class="welcome-desc">Enter your staff credentials to access your executive dashboard.</p>
+      </div>
+
+      <!-- Error Message Banner -->
+      @if (errorMessage) {
+        <div class="login-error-alert">
+          <mat-icon class="alert-icon">error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+      }
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+
+        <!-- Email Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email Address / Staff ID</mat-label>
+          <input
+            matInput
+            type="email"
+            formControlName="email"
+            placeholder="admin@ddfinserve.com"
+            autocomplete="email"
+          />
+          <mat-icon matPrefix class="input-icon">mail_outline</mat-icon>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+        </mat-form-field>
+
+        <!-- Password Field -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Password</mat-label>
+          <input
+            matInput
+            [type]="hidePassword ? 'password' : 'text'"
+            formControlName="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+          />
+          <mat-icon matPrefix class="input-icon">lock_outline</mat-icon>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="hidePassword = !hidePassword"
+            [attr.aria-label]="'Hide password'"
+            class="toggle-pwd-btn"
+          >
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
+            Password must be at least 4 characters
+          </mat-error>
+        </mat-form-field>
+
+        <!-- Form Options Row -->
+        <div class="form-options-row">
+          <mat-checkbox formControlName="rememberMe" color="primary" class="remember-checkbox">
+            Remember me
+          </mat-checkbox>
+          <span class="secure-badge">
+            <mat-icon>verified_user</mat-icon> SSL Secured
+          </span>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          class="submit-login-btn"
+          [disabled]="isLoading"
+        >
+          <ng-container *ngIf="isLoading; else buttonContent">
+            <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+            <span>Verifying Credentials...</span>
+          </ng-container>
+          <ng-template #buttonContent>
+            <mat-icon>login</mat-icon>
+            <span>Sign In to Dashboard</span>
+          </ng-template>
+        </button>
+
+      </form>
+
+      <!-- 1-Click Demo Accounts -->
+      <div class="demo-section">
+        <div class="demo-divider">
+          <span>Quick 1-Click Demo Login</span>
+        </div>
+
+        <div class="demo-cards-row">
+          @for (acc of demoAccounts; track acc.email) {
+            <button
+              type="button"
+              class="demo-account-chip"
+              (click)="fillDemo(acc)"
+              title="Click to fill credentials"
+            >
+              <mat-icon class="demo-chip-icon">{{ acc.icon }}</mat-icon>
+              <div class="demo-chip-text">
+                <span class="demo-chip-label">{{ acc.label }}</span>
+                <span class="demo-chip-email">{{ acc.email }}</span>
+              </div>
+            </button>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Note -->
+    <div class="login-footer-info">
+      <span>DD Finserve Microfinance Management System &copy; 2026</span>
+      <span>Surat Main Branch</span>
+    </div>
+
+  </div>
+
+</div>

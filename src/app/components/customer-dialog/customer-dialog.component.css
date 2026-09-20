@@ -125,6 +125,122 @@
   font-weight: 600;
 }
 
+/* Total Payable Amount Field */
+.total-payable-field .mat-mdc-text-field-wrapper {
+  background-color: #f8fafc !important;
+  border: 1.5px solid #3b82f6 !important;
+  border-radius: 8px;
+}
+
+.total-payable-field input {
+  font-weight: 700 !important;
+  font-size: 1.05rem !important;
+  color: #1e293b !important;
+}
+
+.payable-icon {
+  color: #2563eb !important;
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.payable-calc-hint {
+  color: #475569 !important;
+  font-size: 0.78rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.payable-highlight-text {
+  color: #059669;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+/* Frequency Dropdown & Trigger */
+.frequency-field .mat-mdc-text-field-wrapper {
+  background-color: #f0fdf4 !important;
+  border: 1.5px solid #22c55e !important;
+  border-radius: 8px;
+}
+
+.selected-emi-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.trigger-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #16a34a;
+}
+
+.trigger-label {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.92rem;
+}
+
+.trigger-unit-badge {
+  margin-left: auto;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.emi-option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.opt-icon {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+  color: #2563eb;
+}
+
+.opt-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.opt-title-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.opt-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.opt-hindi {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.opt-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 /* Status Select Pill */
 .status-option {
   padding: 2px 8px;

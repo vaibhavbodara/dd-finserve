@@ -60,7 +60,15 @@ exports.getLoanById = async (req, res) => {
 // @route   POST /api/loans
 exports.createLoan = async (req, res) => {
   try {
-    const { customerId, principalAmount, interestRate = 10, tenureDays = 100, startDate = new Date(), notes } = req.body;
+    const {
+      customerId,
+      principalAmount,
+      interestRate = 10,
+      tenureDays = 100,
+      emiType = 'Daily',
+      startDate = new Date(),
+      notes,
+    } = req.body;
 
     const customer = await Customer.findById(customerId);
     if (!customer) {
@@ -74,16 +82,21 @@ exports.createLoan = async (req, res) => {
 
     const interestAmount = Math.round((principal * rate) / 100);
     const totalAmount = principal + interestAmount;
-    const dailyEMI = Math.ceil(totalAmount / tenure);
+    const emiAmount = Math.ceil(totalAmount / tenure);
 
     const loan = await Loan.create({
       customer: customer._id,
+      loanAmount: principal,
       principalAmount: principal,
       interestRate: rate,
       interestAmount,
       totalAmount,
       tenureDays: tenure,
-      dailyEMI,
+      totalEMI: tenure,
+      emiType,
+      emiAmount,
+      dailyEMI: emiAmount,
+      loanStartDate: new Date(startDate),
       startDate: new Date(startDate),
       status: 'Active',
       totalPaid: 0,

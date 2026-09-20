@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -41,6 +42,7 @@ export class CustomerListComponent implements OnInit {
   private customerService = inject(CustomerService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private route = inject(ActivatedRoute);
 
   customers: CustomerEntry[] = [];
   filteredCustomers: CustomerEntry[] = [];
@@ -50,6 +52,7 @@ export class CustomerListComponent implements OnInit {
   searchTerm = '';
   selectedStatus = 'All';
   selectedCollector = 'All';
+  selectedEmiType = 'All';
 
   // Collectors list
   collectors: string[] = ['All', 'Agent Rahul', 'Agent Suresh', 'Agent Priya', 'Agent Amit', 'Office Branch'];
@@ -85,7 +88,12 @@ export class CustomerListComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadCustomers();
+    this.route.queryParams.subscribe((params) => {
+      if (params['status']) {
+        this.selectedStatus = params['status'];
+      }
+      this.loadCustomers();
+    });
   }
 
   loadCustomers() {
@@ -114,6 +122,10 @@ export class CustomerListComponent implements OnInit {
       list = list.filter((c) => c.collectorName === this.selectedCollector);
     }
 
+    if (this.selectedEmiType && this.selectedEmiType !== 'All') {
+      list = list.filter((c) => (c.emiType || 'Daily') === this.selectedEmiType);
+    }
+
     if (this.searchTerm && this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase().trim();
       list = list.filter(
@@ -127,6 +139,24 @@ export class CustomerListComponent implements OnInit {
     }
 
     this.filteredCustomers = list;
+  }
+
+  getEmiUnit(type?: string): string {
+    if (type === 'Weekly') return 'week';
+    if (type === 'Monthly') return 'month';
+    return 'day';
+  }
+
+  getTenureUnit(type?: string): string {
+    if (type === 'Weekly') return 'Weeks';
+    if (type === 'Monthly') return 'Months';
+    return 'Days';
+  }
+
+  getEmiBadgeClass(type?: string): string {
+    if (type === 'Weekly') return 'plan-weekly';
+    if (type === 'Monthly') return 'plan-monthly';
+    return 'plan-daily';
   }
 
   openAddCustomerDialog() {

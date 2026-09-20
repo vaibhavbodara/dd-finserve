@@ -1,0 +1,557 @@
+<div class="calculator-container">
+
+  <!-- Top Hero Header -->
+  <div class="calc-header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <a routerLink="/dashboard" class="bc-link">Dashboard</a>
+        <mat-icon class="bc-arrow">chevron_right</mat-icon>
+        <span class="bc-current">EMI Calculator</span>
+      </div>
+      <h1 class="page-title">EMI Calculator & Customer Consultation</h1>
+    </div>
+
+    <div class="header-right">
+      <div class="customer-name-field">
+        <mat-icon class="search-user-icon">person</mat-icon>
+        <input
+          type="text"
+          [(ngModel)]="customerNameQuote"
+          placeholder="Customer / Prospect Name (Optional)"
+          class="prospect-input"
+        />
+      </div>
+
+      <button mat-raised-button color="primary" class="btn-primary-action" (click)="openOnboardDialogWithCurrentValues()">
+        <mat-icon>person_add</mat-icon>
+        <span>Onboard Customer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Calculator Grid -->
+  <div class="calc-main-grid">
+
+    <!-- LEFT COLUMN: Interactive Parameter Controls -->
+    <div class="inputs-card">
+      <div class="section-badge">
+        <mat-icon>tune</mat-icon>
+        <span>Loan Parameters</span>
+      </div>
+
+      <!-- 1. Collection Frequency Selector -->
+      <div class="input-group freq-group">
+        <label class="group-label">
+          <span>Collection Frequency</span>
+          <span class="label-hint">EMI वसूली का प्रकार</span>
+        </label>
+        <div class="freq-toggle-row">
+          <button
+            type="button"
+            class="freq-btn"
+            [class.active]="emiType === 'Daily'"
+            (click)="setFrequency('Daily')"
+          >
+            <mat-icon>today</mat-icon>
+            <div class="freq-btn-text">
+              <strong>Daily</strong>
+              <span>प्रति दिन</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="freq-btn"
+            [class.active]="emiType === 'Weekly'"
+            (click)="setFrequency('Weekly')"
+          >
+            <mat-icon>date_range</mat-icon>
+            <div class="freq-btn-text">
+              <strong>Weekly</strong>
+              <span>प्रति सप्ताह</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            class="freq-btn"
+            [class.active]="emiType === 'Monthly'"
+            (click)="setFrequency('Monthly')"
+          >
+            <mat-icon>calendar_month</mat-icon>
+            <div class="freq-btn-text">
+              <strong>Monthly</strong>
+              <span>प्रति माह</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. Loan Amount (Principal) -->
+      <div class="input-group">
+        <div class="group-header-row">
+          <label class="group-label">
+            <span>Loan Amount (Principal)</span>
+            <span class="label-hint">ऋण मूलधन राशि</span>
+          </label>
+          <div class="currency-input-wrapper">
+            <span class="currency-prefix">₹</span>
+            <input
+              type="number"
+              [(ngModel)]="loanAmount"
+              (ngModelChange)="calculateAll()"
+              class="number-input"
+              step="1000"
+              min="500"
+              max="1000000"
+            />
+          </div>
+        </div>
+
+        <input
+          type="range"
+          [(ngModel)]="loanAmount"
+          (ngModelChange)="calculateAll()"
+          min="1000"
+          max="200000"
+          step="1000"
+          class="custom-slider"
+        />
+
+        <div class="preset-chips-row">
+          <span class="chips-label">Quick:</span>
+          @for (preset of loanPresets; track preset) {
+            <button
+              type="button"
+              class="chip-btn"
+              [class.chip-active]="loanAmount === preset"
+              (click)="setLoanAmount(preset)"
+            >
+              ₹{{ preset | number }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- 3. Flat Interest Rate (%) -->
+      <div class="input-group">
+        <div class="group-header-row">
+          <label class="group-label">
+            <span>Flat Interest Rate</span>
+            <span class="label-hint">सीधा ब्याज दर (%)</span>
+          </label>
+          <div class="rate-input-wrapper">
+            <input
+              type="number"
+              [(ngModel)]="interestRate"
+              (ngModelChange)="calculateAll()"
+              class="number-input"
+              step="0.5"
+              min="0"
+              max="50"
+            />
+            <span class="percent-suffix">%</span>
+          </div>
+        </div>
+
+        <input
+          type="range"
+          [(ngModel)]="interestRate"
+          (ngModelChange)="calculateAll()"
+          min="0"
+          max="30"
+          step="0.5"
+          class="custom-slider slider-accent"
+        />
+
+        <div class="preset-chips-row">
+          <span class="chips-label">Rates:</span>
+          @for (rate of ratePresets; track rate) {
+            <button
+              type="button"
+              class="chip-btn"
+              [class.chip-active]="interestRate === rate"
+              (click)="setInterestRate(rate)"
+            >
+              {{ rate }}%
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- 4. Tenure / Duration -->
+      <div class="input-group">
+        <div class="group-header-row">
+          <label class="group-label">
+            <span>Tenure ({{ tenureUnit }})</span>
+            <span class="label-hint">अवधि / कुल किश्तें ({{ hindiFrequencyText }})</span>
+          </label>
+          <div class="tenure-input-wrapper">
+            <input
+              type="number"
+              [(ngModel)]="tenure"
+              (ngModelChange)="calculateAll()"
+              class="number-input"
+              min="1"
+              max="365"
+            />
+            <span class="tenure-suffix">{{ tenureUnit }}</span>
+          </div>
+        </div>
+
+        <input
+          type="range"
+          [(ngModel)]="tenure"
+          (ngModelChange)="calculateAll()"
+          [min]="emiType === 'Daily' ? 10 : (emiType === 'Weekly' ? 4 : 1)"
+          [max]="emiType === 'Daily' ? 180 : (emiType === 'Weekly' ? 52 : 36)"
+          step="1"
+          class="custom-slider"
+        />
+
+        <div class="preset-chips-row">
+          <span class="chips-label">Tenures:</span>
+          @for (preset of activeTenurePresets; track preset.value) {
+            <button
+              type="button"
+              class="chip-btn"
+              [class.chip-active]="tenure === preset.value"
+              (click)="setTenure(preset.value)"
+            >
+              {{ preset.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- 5. Loan Start Date -->
+      <div class="input-group date-input-group">
+        <label class="group-label">
+          <span>Loan Start Date (ऋण प्रारंभ तिथि)</span>
+        </label>
+        <div class="date-row">
+          <input
+            type="date"
+            [(ngModel)]="startDate"
+            (ngModelChange)="calculateAll()"
+            class="native-date-input"
+          />
+          <div class="computed-end-date">
+            <span class="calc-label">Maturity Date (समाप्ति तिथि):</span>
+            <strong>{{ calculatedEndDate | date:'mediumDate' }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Customer Quotation Card & Visual Summary -->
+    <div class="quotation-card" id="quotationSlip">
+      <div class="quotation-header">
+        <div class="quote-brand">
+          <div class="quote-badge">DD FINSERVE</div>
+          <span class="quote-tagline">Loan & EMI Quotation Slip</span>
+        </div>
+        @if (customerNameQuote) {
+          <div class="quote-client-tag">
+            <mat-icon>person</mat-icon>
+            <span>{{ customerNameQuote }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Big Highlighted EMI Figure -->
+      <div class="hero-emi-box">
+        <span class="hero-emi-label">PAYABLE PER {{ frequencyUnit | uppercase }}</span>
+        <div class="hero-emi-amount">
+          <span class="rupee-symbol">₹</span>
+          <span class="amount-number">{{ emiAmount | number }}</span>
+          <span class="hero-unit">/ {{ frequencyUnit }}</span>
+        </div>
+        <div class="hero-tenure-tag">
+          <mat-icon>replay</mat-icon>
+          <span>For {{ tenure }} {{ tenureUnit }} ({{ emiType }} Collection)</span>
+        </div>
+      </div>
+
+      <!-- Two-Color Ratio Bar -->
+      <div class="ratio-breakdown-card">
+        <div class="ratio-bar-header">
+          <span class="ratio-title">Payment Ratio</span>
+          <span class="ratio-legend">
+            <span class="dot dot-principal"></span> Principal: {{ principalPercentage }}%
+            <span class="dot dot-interest"></span> Interest: {{ interestPercentage }}%
+          </span>
+        </div>
+        <div class="ratio-bar">
+          <div class="ratio-fill-principal" [style.width.%]="principalPercentage"></div>
+          <div class="ratio-fill-interest" [style.width.%]="interestPercentage"></div>
+        </div>
+      </div>
+
+      <!-- Detailed Numbers Grid -->
+      <div class="quote-details-grid">
+        <div class="detail-tile">
+          <span class="detail-label">Loan Principal (मूलधन)</span>
+          <strong class="detail-value text-blue">₹{{ loanAmount | number }}</strong>
+        </div>
+
+        <div class="detail-tile">
+          <span class="detail-label">Flat Rate (ब्याज दर)</span>
+          <strong class="detail-value text-amber">{{ interestRate }}% Flat</strong>
+        </div>
+
+        <div class="detail-tile">
+          <span class="detail-label">Total Flat Interest (कुल ब्याज)</span>
+          <strong class="detail-value text-rose">₹{{ totalInterest | number }}</strong>
+        </div>
+
+        <div class="detail-tile highlight-total">
+          <span class="detail-label">Total Amount to Pay (कुल देय राशि)</span>
+          <strong class="detail-value text-emerald">₹{{ totalPayable | number }}</strong>
+        </div>
+
+        <div class="detail-tile">
+          <span class="detail-label">Disbursement Date</span>
+          <strong class="detail-value">{{ startDate | date:'mediumDate' }}</strong>
+        </div>
+
+        <div class="detail-tile">
+          <span class="detail-label">Final Maturity Date</span>
+          <strong class="detail-value">{{ calculatedEndDate | date:'mediumDate' }}</strong>
+        </div>
+      </div>
+
+      <!-- Action Buttons Row -->
+      <div class="quote-actions-row">
+        <button mat-stroked-button class="quote-btn btn-copy" (click)="copyQuotationText()" title="Copy formatted quote for WhatsApp">
+          <mat-icon>content_copy</mat-icon>
+          <span>Copy for WhatsApp</span>
+        </button>
+
+        <button mat-stroked-button class="quote-btn btn-print" (click)="printQuotation()" title="Print quotation slip">
+          <mat-icon>print</mat-icon>
+          <span>Print Slip</span>
+        </button>
+
+        <button mat-raised-button color="primary" class="quote-btn btn-apply" (click)="openOnboardDialogWithCurrentValues()">
+          <mat-icon>check_circle</mat-icon>
+          <span>Onboard with this Loan</span>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- SECTION 2: Customer Explanation Step-by-Step Breakdown -->
+  <div class="explanation-section">
+    <div class="section-title-bar">
+      <div class="title-with-icon">
+        <mat-icon class="sec-icon text-indigo">school</mat-icon>
+        <div>
+          <h2 class="sec-title">How This Loan Works (Customer Explanation Guide)</h2>
+          <p class="sec-desc">ग्राहक को आसान भाषा में ऋण एवं किश्त की गणना समझाने के 4 चरण</p>
+        </div>
+      </div>
+      <div class="formula-pill">
+        <span>Total = Principal + (Principal × Rate %)</span>
+      </div>
+    </div>
+
+    <div class="steps-grid">
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-badge step-1">1</div>
+        <div class="step-icon-circle bg-blue">
+          <mat-icon>savings</mat-icon>
+        </div>
+        <h3 class="step-title">1. Loan Disbursed</h3>
+        <p class="step-hindi">कर्ज राशि (हाथ में मिलने वाली रकम)</p>
+        <div class="step-highlight text-blue">₹{{ loanAmount | number }}</div>
+        <p class="step-explanation">
+          Customer gets <strong>₹{{ loanAmount | number }}</strong> credited or in cash on loan approval.
+        </p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-badge step-2">2</div>
+        <div class="step-icon-circle bg-amber">
+          <mat-icon>calculate</mat-icon>
+        </div>
+        <h3 class="step-title">2. Flat Interest Calculation</h3>
+        <p class="step-hindi">सीधा ब्याज गणना ({{ interestRate }}% दर पर)</p>
+        <div class="step-highlight text-amber">₹{{ totalInterest | number }}</div>
+        <p class="step-explanation">
+          Calculation: ₹{{ loanAmount | number }} × {{ interestRate }}% = <strong>₹{{ totalInterest | number }}</strong> total interest for entire period.
+        </p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card">
+        <div class="step-badge step-3">3</div>
+        <div class="step-icon-circle bg-rose">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <h3 class="step-title">3. Total Repayment Amount</h3>
+        <p class="step-hindi">कुल लौटाई जाने वाली राशि</p>
+        <div class="step-highlight text-rose">₹{{ totalPayable | number }}</div>
+        <p class="step-explanation">
+          Principal (₹{{ loanAmount | number }}) + Interest (₹{{ totalInterest | number }}) = <strong>₹{{ totalPayable | number }}</strong> total to return.
+        </p>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-card">
+        <div class="step-badge step-4">4</div>
+        <div class="step-icon-circle bg-emerald">
+          <mat-icon>event_repeat</mat-icon>
+        </div>
+        <h3 class="step-title">4. Installment Distribution</h3>
+        <p class="step-hindi">प्रति किश्त भुगतान ({{ emiType }})</p>
+        <div class="step-highlight text-emerald">₹{{ emiAmount | number }} / {{ frequencyUnit }}</div>
+        <p class="step-explanation">
+          ₹{{ totalPayable | number }} divided by {{ tenure }} installments = <strong>₹{{ emiAmount | number }}</strong> payable each {{ frequencyUnit }}.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: Multi-Frequency Plan Comparison -->
+  <div class="comparison-section">
+    <div class="section-title-bar">
+      <div class="title-with-icon">
+        <mat-icon class="sec-icon text-blue">compare_arrows</mat-icon>
+        <div>
+          <h2 class="sec-title">Flexible Collection Comparison for ₹{{ loanAmount | number }}</h2>
+          <p class="sec-desc">Compare Daily, Weekly, and Monthly collection plans to help customer choose</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      @for (plan of planComparisons; track plan.frequency) {
+        <div
+          class="plan-card"
+          [class.plan-selected]="emiType === plan.frequency"
+          (click)="applyPlan(plan)"
+        >
+          <div class="plan-top-row">
+            <div class="plan-icon-name">
+              <mat-icon class="plan-type-icon">{{ plan.icon }}</mat-icon>
+              <div>
+                <strong class="plan-name">{{ plan.title }}</strong>
+                <span class="plan-hn">{{ plan.hindiTitle }}</span>
+              </div>
+            </div>
+            @if (emiType === plan.frequency) {
+              <span class="active-pill">Active Selected</span>
+            }
+          </div>
+
+          <div class="plan-body">
+            <div class="plan-emi-val">
+              <span class="p-curr">₹</span>
+              <span class="p-num">{{ plan.emiAmount | number }}</span>
+              <span class="p-per">/ {{ plan.emiUnit }}</span>
+            </div>
+
+            <div class="plan-meta-row">
+              <span class="p-meta">Tenure: <strong>{{ plan.tenure }} {{ plan.tenureUnit }}</strong></span>
+              <span class="p-meta">Total Payable: <strong>₹{{ totalPayable | number }}</strong></span>
+            </div>
+          </div>
+
+          <button
+            mat-stroked-button
+            class="select-plan-btn"
+            [class.btn-active-plan]="emiType === plan.frequency"
+            (click)="applyPlan(plan); $event.stopPropagation()"
+          >
+            {{ emiType === plan.frequency ? 'Currently Selected' : 'Select ' + plan.title }}
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- SECTION 4: Installment-by-Installment Repayment Schedule -->
+  <div class="schedule-section">
+    <div class="section-title-bar">
+      <div class="title-with-icon">
+        <mat-icon class="sec-icon text-emerald">receipt_long</mat-icon>
+        <div>
+          <h2 class="sec-title">Repayment Amortization Schedule (किश्त-दर-किश्त सूची)</h2>
+          <p class="sec-desc">
+            Full installment schedule from Start Date to Maturity Date for transparency
+          </p>
+        </div>
+      </div>
+
+      <div class="schedule-actions">
+        <button
+          mat-button
+          class="toggle-schedule-btn"
+          (click)="showAllSchedule = !showAllSchedule"
+        >
+          <mat-icon>{{ showAllSchedule ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+          <span>{{ showAllSchedule ? 'Show First 10 Installments' : 'Show All ' + tenure + ' Installments' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="schedule-table-card">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Installment #</th>
+            <th>Due Date</th>
+            <th>EMI Amount</th>
+            <th>Principal Component</th>
+            <th>Interest Component</th>
+            <th>Remaining Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of displayedSchedule; track item.installmentNo) {
+            <tr>
+              <td>
+                <span class="inst-pill">#{{ item.installmentNo }}</span>
+              </td>
+              <td>
+                <span class="date-text">{{ item.dueDate | date:'mediumDate' }}</span>
+              </td>
+              <td>
+                <strong class="emi-text text-emerald">₹{{ item.emiAmount | number }}</strong>
+              </td>
+              <td>
+                <span class="part-text">₹{{ item.principalPortion | number }}</span>
+              </td>
+              <td>
+                <span class="part-text text-amber">₹{{ item.interestPortion | number }}</span>
+              </td>
+              <td>
+                <strong class="balance-text" [class.balance-zero]="item.remainingBalance === 0">
+                  ₹{{ item.remainingBalance | number }}
+                </strong>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (!showAllSchedule && schedule.length > 10) {
+        <div class="schedule-truncated-bar">
+          <span>Showing 10 of {{ schedule.length }} installments</span>
+          <button mat-button color="primary" (click)="showAllSchedule = true">
+            Show all remaining {{ schedule.length - 10 }} installments
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>

@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, catchError, map, tap } from 'rxjs';
-import { ApiResponse, CustomerEntry } from '../models/customer.model';
+import { ApiResponse, CustomerEntry, DashboardMetrics } from '../models/customer.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,6 +10,7 @@ export class CustomerService {
   private http = inject(HttpClient);
   private apiUrl = 'http://localhost:5000/api/customers';
   private healthUrl = 'http://localhost:5000/api/health';
+  private metricsUrl = 'http://localhost:5000/api/dashboard/metrics';
 
   // Realistic initial mock data stored in localStorage for instant reliability
   private defaultMockCustomers: CustomerEntry[] = [
@@ -20,6 +21,7 @@ export class CustomerService {
       mobileNumber: '9876543210',
       address: 'Shop 12, Main Market, MG Road',
       loanAmount: 10000,
+      emiType: 'Daily',
       dailyEMI: 110,
       totalEMI: 100,
       paidEMI: 15,
@@ -43,14 +45,15 @@ export class CustomerService {
       mobileNumber: '9822345678',
       address: 'Flat 402, Shiv Krupa, Station Road',
       loanAmount: 20000,
-      dailyEMI: 220,
-      totalEMI: 100,
-      paidEMI: 45,
-      remainingBalance: 12100,
-      totalAmount: 22000,
-      totalPaid: 9900,
+      emiType: 'Weekly',
+      dailyEMI: 1700,
+      totalEMI: 12,
+      paidEMI: 5,
+      remainingBalance: 11900,
+      totalAmount: 20400,
+      totalPaid: 8500,
       loanStartDate: '2026-08-10',
-      loanEndDate: '2026-11-18',
+      loanEndDate: '2026-11-02',
       collectorName: 'Agent Suresh',
       status: 'Active',
       kycDocument: {
@@ -66,6 +69,7 @@ export class CustomerService {
       mobileNumber: '9765432109',
       address: 'Gala 5, Industrial Estate',
       loanAmount: 15000,
+      emiType: 'Daily',
       dailyEMI: 165,
       totalEMI: 100,
       paidEMI: 100,
@@ -84,14 +88,15 @@ export class CustomerService {
       mobileNumber: '9988776655',
       address: 'Plot 88, Gandhi Nagar, 3rd Cross',
       loanAmount: 12000,
-      dailyEMI: 132,
-      totalEMI: 100,
-      paidEMI: 12,
-      remainingBalance: 11616,
+      emiType: 'Monthly',
+      dailyEMI: 2200,
+      totalEMI: 6,
+      paidEMI: 1,
+      remainingBalance: 11000,
       totalAmount: 13200,
-      totalPaid: 1584,
+      totalPaid: 2200,
       loanStartDate: '2026-07-15',
-      loanEndDate: '2026-10-23',
+      loanEndDate: '2027-01-15',
       collectorName: 'Agent Priya',
       status: 'Overdue',
     },
@@ -102,6 +107,7 @@ export class CustomerService {
       mobileNumber: '9123456780',
       address: 'Shop 4, APMC Fruit Market',
       loanAmount: 25000,
+      emiType: 'Daily',
       dailyEMI: 275,
       totalEMI: 100,
       paidEMI: 30,
@@ -140,6 +146,54 @@ export class CustomerService {
       map((res) => ({ online: res.status === 'ok', database: res.database })),
       catchError(() => of({ online: false, database: 'offline' }))
     );
+  }
+
+  // GET: Fetch dashboard KPI metrics
+  getDashboardMetrics(): Observable<DashboardMetrics> {
+    return this.http.get<ApiResponse<DashboardMetrics>>(this.metricsUrl).pipe(
+      map((res) => res.data),
+      catchError(() => {
+        const customers = this.getLocalCustomers();
+        return of(this.computeLocalDashboardMetrics(customers));
+      })
+    );
+  }
+
+  computeLocalDashboardMetrics(customers: CustomerEntry[]): DashboardMetrics {
+    const active = customers.filter((c) => c.status === 'Active');
+    const overdue = customers.filter((c) => c.status === 'Overdue');
+    const completed = customers.filter((c) => c.status === 'Completed');
+
+    const todaysTotalEmi = active.reduce((sum, c) => sum + (c.dailyEMI || 0), 0);
+    const todaysReceived = Math.round(todaysTotalEmi * 0.45);
+    const pendingEmi = Math.max(0, todaysTotalEmi - todaysReceived);
+
+    const totalDisbursed = customers.reduce((sum, c) => sum + (c.loanAmount || 0), 0);
+    const totalOutstanding = customers.reduce((sum, c) => sum + (c.remainingBalance || 0), 0);
+    const totalCollected = customers.reduce((sum, c) => sum + (c.totalPaid || 0), 0);
+
+    const dailyCount = customers.filter((c) => (c.emiType || 'Daily') === 'Daily').length;
+    const weeklyCount = customers.filter((c) => c.emiType === 'Weekly').length;
+    const monthlyCount = customers.filter((c) => c.emiType === 'Monthly').length;
+
+    return {
+      totalCustomers: customers.length,
+      todaysTotalEmi,
+      todaysReceived,
+      pendingEmi,
+      overdueCustomers: overdue.length,
+      activeLoansCount: active.length,
+      completedLoansCount: completed.length,
+      efficiencyPercentage: todaysTotalEmi > 0 ? Math.round((todaysReceived / todaysTotalEmi) * 100) : 0,
+      totalDisbursed,
+      totalOutstanding,
+      totalCollected,
+      planStats: {
+        daily: dailyCount,
+        weekly: weeklyCount,
+        monthly: monthlyCount,
+      },
+    };
   }
 
   // GET: Fetch all customers with optional search & filters
@@ -202,7 +256,9 @@ export class CustomerService {
           mobileNumber: entry.mobileNumber || '',
           address: entry.address || '',
           loanAmount: Number(entry.loanAmount) || 0,
+          emiType: entry.emiType || 'Daily',
           dailyEMI: Number(entry.dailyEMI) || 0,
+          emiAmount: Number(entry.emiAmount || entry.dailyEMI) || 0,
           totalEMI: Number(entry.totalEMI) || 100,
           loanStartDate: entry.loanStartDate || new Date().toISOString().slice(0, 10),
           loanEndDate: entry.loanEndDate || '',

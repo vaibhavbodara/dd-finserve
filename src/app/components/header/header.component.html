@@ -1,7 +1,7 @@
 <header class="app-header">
   <div class="header-container">
     <!-- Brand & Logo -->
-    <div class="brand-section" routerLink="/">
+    <div class="brand-section" routerLink="/dashboard">
       <div class="brand-logo-wrapper">
         <svg class="brand-logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -12,7 +12,7 @@
             </linearGradient>
             <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stop-color="#fbbf24" />
-              <stop offset="100%" stop-color="#f59e0b" />
+              <stop offset="50%" stop-color="#f59e0b" />
             </linearGradient>
           </defs>
           <!-- Hexagonal Shield Base -->
@@ -31,12 +31,19 @@
         <div class="brand-name">
           <span class="brand-highlight">DD</span> FINSERVE
         </div>
-        <div class="brand-tagline">DAILY EMI & MICROFINANCE</div>
       </div>
     </div>
 
     <!-- Navigation Options -->
     <nav class="nav-links">
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+        <mat-icon class="nav-icon">dashboard</mat-icon>
+        <span>Dashboard</span>
+      </a>
+      <a routerLink="/calculator" routerLinkActive="active" class="nav-item">
+        <mat-icon class="nav-icon">calculate</mat-icon>
+        <span>EMI Calculator</span>
+      </a>
       <a routerLink="/customers" routerLinkActive="active" class="nav-item">
         <mat-icon class="nav-icon">people_alt</mat-icon>
         <span>Customer Details</span>
@@ -45,17 +52,104 @@
 
     <!-- Right Header Actions -->
     <div class="header-actions">
-      <!-- Status Indicator -->
-      <div class="system-status" [title]="backendOnline ? 'Backend Online (MongoDB: ' + databaseStatus + ')' : 'Using Local Storage Mode'">
-        <span class="status-dot" [class.online]="backendOnline"></span>
-        <span class="status-text">{{ backendOnline ? 'API Connected' : 'Local Storage Mode' }}</span>
+      <!-- User Profile Dropdown Trigger -->
+      <div
+        class="user-profile-trigger"
+        [matMenuTriggerFor]="userProfileMenu"
+        [matTooltip]="profile.name + ' (' + profile.role + ')'"
+      >
+        <div class="user-avatar" [style.background]="profile.avatarColor || '#2563eb'">
+          <span class="avatar-text">{{ initials }}</span>
+          <span
+            class="user-status-dot"
+            [class.status-online]="profile.status === 'Online'"
+            [class.status-field]="profile.status === 'On Field'"
+            [class.status-away]="profile.status === 'Away'"
+          ></span>
+        </div>
+
+        <div class="user-info-text">
+          <span class="user-name">{{ profile.name }}</span>
+          <span class="user-role">{{ profile.role }}</span>
+        </div>
+
+        <mat-icon class="profile-chevron">expand_more</mat-icon>
       </div>
 
-      <!-- Add Customer Action Button -->
-      <button mat-raised-button color="primary" class="add-customer-btn" (click)="onAddCustomer()">
-        <mat-icon>person_add</mat-icon>
-        <span>Add Customer</span>
-      </button>
+      <!-- User Profile Material Menu -->
+      <mat-menu #userProfileMenu="matMenu" class="custom-user-menu" xPosition="before">
+        <!-- Profile Header in Dropdown -->
+        <div class="menu-profile-card" (click)="$event.stopPropagation()">
+          <div class="menu-avatar-large" [style.background]="profile.avatarColor || '#2563eb'">
+            <span>{{ initials }}</span>
+          </div>
+          <div class="menu-user-details">
+            <h4 class="menu-user-name">{{ profile.name }}</h4>
+            <span class="menu-user-email">{{ profile.email }}</span>
+            <div class="menu-badge-row">
+              <span class="menu-emp-id">{{ profile.employeeId }}</span>
+              <span class="menu-branch-tag">{{ profile.branch }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Status Selector -->
+        <div class="menu-status-bar" (click)="$event.stopPropagation()">
+          <span class="status-bar-label">Current Status:</span>
+          <div class="status-chips">
+            <button
+              type="button"
+              class="status-chip chip-online"
+              [class.chip-selected]="profile.status === 'Online'"
+              (click)="setStatus('Online')"
+            >
+              <span class="dot-indicator dot-green"></span> Online
+            </button>
+            <button
+              type="button"
+              class="status-chip chip-field"
+              [class.chip-selected]="profile.status === 'On Field'"
+              (click)="setStatus('On Field')"
+            >
+              <span class="dot-indicator dot-blue"></span> On Field
+            </button>
+            <button
+              type="button"
+              class="status-chip chip-away"
+              [class.chip-selected]="profile.status === 'Away'"
+              (click)="setStatus('Away')"
+            >
+              <span class="dot-indicator dot-amber"></span> Away
+            </button>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Menu Action Options -->
+        <button mat-menu-item (click)="openProfileDialog()">
+          <mat-icon class="menu-action-icon text-blue">manage_accounts</mat-icon>
+          <span>My Profile & Settings</span>
+        </button>
+
+        <button mat-menu-item (click)="openProfileDialog()">
+          <mat-icon class="menu-action-icon text-emerald">storefront</mat-icon>
+          <span>Branch: {{ profile.branch }}</span>
+        </button>
+
+        <button mat-menu-item (click)="openProfileDialog()">
+          <mat-icon class="menu-action-icon text-amber">track_changes</mat-icon>
+          <span>Daily Target: ₹{{ profile.dailyTarget | number }}</span>
+        </button>
+
+        <mat-divider></mat-divider>
+
+        <button mat-menu-item (click)="logout()" class="logout-menu-item">
+          <mat-icon class="menu-action-icon text-rose">lock</mat-icon>
+          <span>Lock / Sign Out</span>
+        </button>
+      </mat-menu>
+
     </div>
   </div>
 </header>

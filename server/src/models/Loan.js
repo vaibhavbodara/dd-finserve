@@ -18,6 +18,17 @@ const loanSchema = new mongoose.Schema(
       required: [true, 'Loan amount is required'],
       min: [100, 'Loan amount must be at least 100'],
     },
+    emiType: {
+      type: String,
+      enum: ['Daily', 'Weekly', 'Monthly'],
+      default: 'Daily',
+    },
+    emiAmount: {
+      type: Number,
+      default: function () {
+        return this.dailyEMI;
+      },
+    },
     dailyEMI: {
       type: Number,
       required: [true, 'Daily EMI is required'],
@@ -26,7 +37,7 @@ const loanSchema = new mongoose.Schema(
     totalEMI: {
       type: Number,
       required: [true, 'Total EMI count is required'],
-      default: 100, // standard 100 days
+      default: 100, // standard default
     },
     paidEMI: {
       type: Number,
@@ -81,7 +92,13 @@ loanSchema.pre('save', async function (next) {
   }
   if (!this.loanEndDate && this.loanStartDate && this.totalEMI) {
     const end = new Date(this.loanStartDate);
-    end.setDate(end.getDate() + this.totalEMI);
+    if (this.emiType === 'Weekly') {
+      end.setDate(end.getDate() + this.totalEMI * 7);
+    } else if (this.emiType === 'Monthly') {
+      end.setMonth(end.getMonth() + this.totalEMI);
+    } else {
+      end.setDate(end.getDate() + this.totalEMI);
+    }
     this.loanEndDate = end;
   }
   next();

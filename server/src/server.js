@@ -19,20 +19,14 @@ app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(morgan('dev'));
 
-// Database connection check middleware for API endpoints
+// Database connection info middleware
 app.use('/api', (req, res, next) => {
-  if (req.path === '/health') return next();
-  if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({
-      success: false,
-      message: 'MongoDB is currently disconnected. Please ensure MongoDB is running or configure MONGODB_URI in server/.env',
-      database: 'disconnected',
-    });
-  }
+  res.locals.isDbConnected = mongoose.connection.readyState === 1;
   next();
 });
 
 // API Routes
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/loans', require('./routes/loanRoutes'));
@@ -40,18 +34,13 @@ app.use('/api/collections', require('./routes/collectionRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  const dbState = mongoose.connection.readyState;
-  const dbStatusMap = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting',
-  };
+  const isDbConnected = mongoose.connection.readyState === 1;
 
   res.json({
     status: 'ok',
     service: 'dd-finserve-backend',
-    database: dbStatusMap[dbState] || 'unknown',
+    database: isDbConnected ? 'connected' : 'local-storage',
+    mode: isDbConnected ? 'MongoDB Live' : 'Persistent Storage Fallback (Zero Config)',
     timestamp: new Date().toISOString(),
   });
 });

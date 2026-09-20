@@ -1,0 +1,124 @@
+<div class="profile-dialog-container">
+
+  <!-- Header Banner -->
+  <div class="dialog-hero-banner" [style.background]="form.get('avatarColor')?.value || '#2563eb'">
+    <div class="avatar-preview-box">
+      <span class="avatar-initials">{{ initials }}</span>
+    </div>
+    <div class="hero-user-info">
+      <h2 class="user-display-name">{{ form.get('name')?.value || 'User Profile' }}</h2>
+      <div class="user-badges-row">
+        <span class="user-role-pill">{{ form.get('role')?.value }}</span>
+        <span class="user-emp-pill">ID: {{ form.get('employeeId')?.value }}</span>
+      </div>
+    </div>
+    <button mat-icon-button class="close-dialog-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Form Content -->
+  <form [formGroup]="form" (ngSubmit)="save()" class="profile-form-body">
+
+    <div class="form-section-title">
+      <mat-icon>badge</mat-icon>
+      <span>Personal & Identification Details</span>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Full Name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. Vaibhav Bodara" />
+        <mat-icon matPrefix>person</mat-icon>
+        <mat-error *ngIf="form.get('name')?.hasError('required')">Name is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Employee ID / Staff Code</mat-label>
+        <input matInput formControlName="employeeId" placeholder="e.g. DDF-MGR-001" />
+        <mat-icon matPrefix>badge</mat-icon>
+        <mat-error *ngIf="form.get('employeeId')?.hasError('required')">Employee ID is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Email Address</mat-label>
+        <input matInput formControlName="email" type="email" placeholder="e.g. vaibhav@ddfinserve.com" />
+        <mat-icon matPrefix>email</mat-icon>
+        <mat-error *ngIf="form.get('email')?.hasError('email')">Enter valid email</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mobile Number</mat-label>
+        <input matInput formControlName="phone" placeholder="e.g. +91 98765 43210" />
+        <mat-icon matPrefix>phone</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section-title">
+      <mat-icon>business</mat-icon>
+      <span>Role & Branch Assignment</span>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Designation / Role</mat-label>
+        <mat-select formControlName="role">
+          @for (r of roles; track r) {
+            <mat-option [value]="r">{{ r }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>work</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Branch Location</mat-label>
+        <mat-select formControlName="branch">
+          @for (b of branches; track b) {
+            <mat-option [value]="b">{{ b }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>location_city</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Active Work Status</mat-label>
+        <mat-select formControlName="status">
+          @for (s of statuses; track s) {
+            <mat-option [value]="s">{{ s }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matPrefix>circle</mat-icon>
+      </mat-form-field>
+
+      <div class="color-picker-box">
+        <label class="color-picker-label">Avatar Badge Color</label>
+        <div class="color-swatches">
+          @for (c of colors; track c) {
+            <button
+              type="button"
+              class="color-circle"
+              [style.background]="c"
+              [class.active-color]="form.get('avatarColor')?.value === c"
+              (click)="setColor(c)"
+            ></button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="dialog-actions-row">
+      <button mat-button type="button" (click)="close()" class="cancel-btn">Cancel</button>
+      <button mat-raised-button color="primary" type="submit" class="save-btn">
+        <mat-icon>check</mat-icon>
+        <span>Save Profile</span>
+      </button>
+    </div>
+
+  </form>
+
+</div>
