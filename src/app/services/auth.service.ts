@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, of, tap, catchError } from 'rxjs';
 import { UserProfile } from '../models/customer.model';
 import { UserProfileService } from './user-profile.service';
+import { environment } from '../../environments/environment';
 
 const AUTH_TOKEN_KEY = 'dd_finserve_auth_token';
 const AUTH_USER_KEY = 'dd_finserve_auth_user';
@@ -23,7 +24,7 @@ export class AuthService {
   private router = inject(Router);
   private profileService = inject(UserProfileService);
 
-  private apiUrl = 'http://localhost:5000/api/auth';
+  private apiUrl = `${environment.apiUrl}/auth`;
 
   private isLoggedInSubject = new BehaviorSubject<boolean>(this.hasValidToken());
   public isLoggedIn$: Observable<boolean> = this.isLoggedInSubject.asObservable();

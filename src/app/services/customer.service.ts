@@ -2,15 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, catchError, map, tap } from 'rxjs';
 import { ApiResponse, CustomerEntry, DashboardMetrics } from '../models/customer.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class CustomerService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5000/api/customers';
-  private healthUrl = 'http://localhost:5000/api/health';
-  private metricsUrl = 'http://localhost:5000/api/dashboard/metrics';
+  private apiUrl = `${environment.apiUrl}/customers`;
+  private healthUrl = `${environment.apiUrl}/health`;
+  private metricsUrl = `${environment.apiUrl}/dashboard/metrics`;
 
   // Realistic initial mock data stored in localStorage for instant reliability
   private defaultMockCustomers: CustomerEntry[] = [

@@ -78,7 +78,7 @@ export class LoginComponent implements OnInit {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
 
     this.loginForm = this.fb.group({
-      email: ['admin@ddfinserve.com', [Validators.required, Validators.email]],
+      email: ['admin@ddfinserve.com', [Validators.required]],
       password: ['admin123', [Validators.required, Validators.minLength(4)]],
       rememberMe: [true],
     });

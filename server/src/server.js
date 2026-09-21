@@ -4,8 +4,11 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
-// Load environment variables
-dotenv.config();
+const path = require('path');
+
+// Load environment variables reliably
+dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config(); // fallback to root .env if present
 
 // Connect to MongoDB
 const connectDB = require('./config/db');
