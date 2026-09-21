@@ -124,3 +124,23 @@ html, body {
   color: #1e293b;
   font-size: 0.88rem;
 }
+
+/* Customer Detail Dialog Panel Styling */
+.customer-detail-dialog-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.customer-detail-dialog-panel app-customer-detail-dialog {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  width: 100% !important;
+  overflow: hidden !important;
+}
+

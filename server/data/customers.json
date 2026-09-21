@@ -17,13 +17,105 @@
     "emiAmount": 5071,
     "dailyEMI": 5071,
     "totalEMI": 12,
-    "paidEMI": 0,
+    "paidEMI": 2,
     "totalAmount": 60852,
-    "totalPaid": 0,
-    "remainingBalance": 60852,
+    "totalPaid": 10142,
+    "remainingBalance": 50710,
     "loanStartDate": "2026-09-20T18:33:04.968Z",
     "loanEndDate": "2026-12-13T18:33:04.968Z",
-    "createdAt": "2026-09-20T18:35:01.320Z"
+    "createdAt": "2026-09-20T18:35:01.320Z",
+    "paymentRecords": [
+      {
+        "installmentNo": 1,
+        "scheduledDate": "2026-09-27T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Paid",
+        "paidDate": "2026-09-21T15:21:33.498Z",
+        "paidAmount": 5071,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 2,
+        "scheduledDate": "2026-10-04T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Paid",
+        "paidAmount": 5071,
+        "paidDate": "2026-09-21T15:21:59.915Z",
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 3,
+        "scheduledDate": "2026-10-11T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 4,
+        "scheduledDate": "2026-10-18T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 5,
+        "scheduledDate": "2026-10-25T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 6,
+        "scheduledDate": "2026-11-01T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 7,
+        "scheduledDate": "2026-11-08T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 8,
+        "scheduledDate": "2026-11-15T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 9,
+        "scheduledDate": "2026-11-22T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 10,
+        "scheduledDate": "2026-11-29T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 11,
+        "scheduledDate": "2026-12-06T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 12,
+        "scheduledDate": "2026-12-13T18:33:04.968Z",
+        "amount": 5071,
+        "status": "Upcoming",
+        "paidAmount": 0
+      }
+    ]
   },
   {
     "_id": "cust-1",
@@ -75,7 +167,109 @@
       "fileType": "image/jpeg",
       "fileData": ""
     },
-    "createdAt": "2026-08-10T00:00:00.000Z"
+    "createdAt": "2026-08-10T00:00:00.000Z",
+    "paymentRecords": [
+      {
+        "installmentNo": 1,
+        "scheduledDate": "2026-08-17T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Paid",
+        "paidDate": "2026-08-17T00:00:00.000Z",
+        "paidAmount": 1700,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Suresh"
+      },
+      {
+        "installmentNo": 2,
+        "scheduledDate": "2026-08-24T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Paid",
+        "paidDate": "2026-08-24T00:00:00.000Z",
+        "paidAmount": 1700,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Suresh"
+      },
+      {
+        "installmentNo": 3,
+        "scheduledDate": "2026-08-31T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Paid",
+        "paidDate": "2026-08-31T00:00:00.000Z",
+        "paidAmount": 1700,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Suresh"
+      },
+      {
+        "installmentNo": 4,
+        "scheduledDate": "2026-09-07T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Paid",
+        "paidDate": "2026-09-07T00:00:00.000Z",
+        "paidAmount": 1700,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Suresh"
+      },
+      {
+        "installmentNo": 5,
+        "scheduledDate": "2026-09-14T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Paid",
+        "paidDate": "2026-09-14T00:00:00.000Z",
+        "paidAmount": 1700,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Suresh"
+      },
+      {
+        "installmentNo": 6,
+        "scheduledDate": "2026-09-21T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Pending",
+        "paidAmount": 0,
+        "collectorName": "Agent Suresh"
+      },
+      {
+        "installmentNo": 7,
+        "scheduledDate": "2026-09-28T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 8,
+        "scheduledDate": "2026-10-05T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 9,
+        "scheduledDate": "2026-10-12T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 10,
+        "scheduledDate": "2026-10-19T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 11,
+        "scheduledDate": "2026-10-26T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Upcoming",
+        "paidAmount": 0
+      },
+      {
+        "installmentNo": 12,
+        "scheduledDate": "2026-11-02T00:00:00.000Z",
+        "amount": 1700,
+        "status": "Upcoming",
+        "paidAmount": 0
+      }
+    ]
   },
   {
     "_id": "cust-3",
@@ -101,7 +295,1009 @@
       "fileType": "",
       "fileData": ""
     },
-    "createdAt": "2026-05-01T00:00:00.000Z"
+    "createdAt": "2026-05-01T00:00:00.000Z",
+    "paymentRecords": [
+      {
+        "installmentNo": 1,
+        "scheduledDate": "2026-05-02T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-09-21T15:20:52.059Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 2,
+        "scheduledDate": "2026-05-03T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-03T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 3,
+        "scheduledDate": "2026-05-04T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-04T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 4,
+        "scheduledDate": "2026-05-05T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-05T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 5,
+        "scheduledDate": "2026-05-06T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-09-21T15:20:35.084Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 6,
+        "scheduledDate": "2026-05-07T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-07T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 7,
+        "scheduledDate": "2026-05-08T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-08T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 8,
+        "scheduledDate": "2026-05-09T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-09T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 9,
+        "scheduledDate": "2026-05-10T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-10T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 10,
+        "scheduledDate": "2026-05-11T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-11T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 11,
+        "scheduledDate": "2026-05-12T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-12T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 12,
+        "scheduledDate": "2026-05-13T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-13T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 13,
+        "scheduledDate": "2026-05-14T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-14T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 14,
+        "scheduledDate": "2026-05-15T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-15T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 15,
+        "scheduledDate": "2026-05-16T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-16T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 16,
+        "scheduledDate": "2026-05-17T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-17T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 17,
+        "scheduledDate": "2026-05-18T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-18T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 18,
+        "scheduledDate": "2026-05-19T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-19T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 19,
+        "scheduledDate": "2026-05-20T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-20T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 20,
+        "scheduledDate": "2026-05-21T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-21T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 21,
+        "scheduledDate": "2026-05-22T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-22T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 22,
+        "scheduledDate": "2026-05-23T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-23T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 23,
+        "scheduledDate": "2026-05-24T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-24T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 24,
+        "scheduledDate": "2026-05-25T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-25T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 25,
+        "scheduledDate": "2026-05-26T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-26T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 26,
+        "scheduledDate": "2026-05-27T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-27T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 27,
+        "scheduledDate": "2026-05-28T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-28T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 28,
+        "scheduledDate": "2026-05-29T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-29T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 29,
+        "scheduledDate": "2026-05-30T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-30T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 30,
+        "scheduledDate": "2026-05-31T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-05-31T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 31,
+        "scheduledDate": "2026-06-01T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-01T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 32,
+        "scheduledDate": "2026-06-02T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-02T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 33,
+        "scheduledDate": "2026-06-03T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-03T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 34,
+        "scheduledDate": "2026-06-04T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-04T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 35,
+        "scheduledDate": "2026-06-05T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-05T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 36,
+        "scheduledDate": "2026-06-06T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-06T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 37,
+        "scheduledDate": "2026-06-07T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-07T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 38,
+        "scheduledDate": "2026-06-08T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-08T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 39,
+        "scheduledDate": "2026-06-09T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-09T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 40,
+        "scheduledDate": "2026-06-10T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-10T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 41,
+        "scheduledDate": "2026-06-11T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-11T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 42,
+        "scheduledDate": "2026-06-12T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-12T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 43,
+        "scheduledDate": "2026-06-13T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-13T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 44,
+        "scheduledDate": "2026-06-14T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-14T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 45,
+        "scheduledDate": "2026-06-15T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-15T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 46,
+        "scheduledDate": "2026-06-16T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-16T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 47,
+        "scheduledDate": "2026-06-17T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-17T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 48,
+        "scheduledDate": "2026-06-18T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-18T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 49,
+        "scheduledDate": "2026-06-19T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-19T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 50,
+        "scheduledDate": "2026-06-20T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-20T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 51,
+        "scheduledDate": "2026-06-21T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-21T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 52,
+        "scheduledDate": "2026-06-22T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-22T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 53,
+        "scheduledDate": "2026-06-23T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-23T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 54,
+        "scheduledDate": "2026-06-24T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-24T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 55,
+        "scheduledDate": "2026-06-25T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-25T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 56,
+        "scheduledDate": "2026-06-26T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-26T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 57,
+        "scheduledDate": "2026-06-27T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-27T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 58,
+        "scheduledDate": "2026-06-28T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-28T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 59,
+        "scheduledDate": "2026-06-29T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-29T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 60,
+        "scheduledDate": "2026-06-30T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-06-30T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 61,
+        "scheduledDate": "2026-07-01T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-01T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 62,
+        "scheduledDate": "2026-07-02T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-02T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 63,
+        "scheduledDate": "2026-07-03T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-03T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 64,
+        "scheduledDate": "2026-07-04T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-04T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 65,
+        "scheduledDate": "2026-07-05T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-05T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 66,
+        "scheduledDate": "2026-07-06T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-06T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 67,
+        "scheduledDate": "2026-07-07T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-07T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 68,
+        "scheduledDate": "2026-07-08T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-08T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 69,
+        "scheduledDate": "2026-07-09T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-09T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 70,
+        "scheduledDate": "2026-07-10T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-10T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 71,
+        "scheduledDate": "2026-07-11T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-11T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 72,
+        "scheduledDate": "2026-07-12T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-12T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 73,
+        "scheduledDate": "2026-07-13T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-13T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 74,
+        "scheduledDate": "2026-07-14T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-14T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 75,
+        "scheduledDate": "2026-07-15T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-15T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 76,
+        "scheduledDate": "2026-07-16T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-16T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 77,
+        "scheduledDate": "2026-07-17T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-17T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 78,
+        "scheduledDate": "2026-07-18T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-18T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 79,
+        "scheduledDate": "2026-07-19T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-19T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 80,
+        "scheduledDate": "2026-07-20T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-20T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 81,
+        "scheduledDate": "2026-07-21T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-21T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 82,
+        "scheduledDate": "2026-07-22T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-22T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 83,
+        "scheduledDate": "2026-07-23T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-23T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 84,
+        "scheduledDate": "2026-07-24T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-24T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 85,
+        "scheduledDate": "2026-07-25T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-25T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 86,
+        "scheduledDate": "2026-07-26T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-26T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 87,
+        "scheduledDate": "2026-07-27T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-27T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 88,
+        "scheduledDate": "2026-07-28T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-28T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 89,
+        "scheduledDate": "2026-07-29T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-29T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 90,
+        "scheduledDate": "2026-07-30T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-30T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 91,
+        "scheduledDate": "2026-07-31T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-07-31T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 92,
+        "scheduledDate": "2026-08-01T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-01T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 93,
+        "scheduledDate": "2026-08-02T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-02T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 94,
+        "scheduledDate": "2026-08-03T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-03T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 95,
+        "scheduledDate": "2026-08-04T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-04T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 96,
+        "scheduledDate": "2026-08-05T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-05T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 97,
+        "scheduledDate": "2026-08-06T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-06T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 98,
+        "scheduledDate": "2026-08-07T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-07T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 99,
+        "scheduledDate": "2026-08-08T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-08T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      },
+      {
+        "installmentNo": 100,
+        "scheduledDate": "2026-08-09T00:00:00.000Z",
+        "amount": 165,
+        "status": "Paid",
+        "paidDate": "2026-08-09T00:00:00.000Z",
+        "paidAmount": 165,
+        "paymentMode": "Cash",
+        "collectorName": "Agent Rahul"
+      }
+    ]
   },
   {
     "_id": "cust-4",

@@ -94,6 +94,7 @@ exports.getCustomers = async (req, res) => {
           totalPaid: loan ? loan.totalPaid : 0,
           loanStartDate: loan ? loan.loanStartDate : null,
           loanEndDate: loan ? loan.loanEndDate : null,
+          paymentRecords: loan ? (loan.paymentRecords || []) : [],
         };
       })
     );
@@ -395,6 +396,11 @@ exports.updateCustomer = async (req, res) => {
         current.remainingBalance = Math.max(0, current.totalAmount - (current.totalPaid || 0));
       }
 
+      if (req.body.paidEMI !== undefined) current.paidEMI = Number(req.body.paidEMI);
+      if (req.body.totalPaid !== undefined) current.totalPaid = Number(req.body.totalPaid);
+      if (req.body.remainingBalance !== undefined) current.remainingBalance = Number(req.body.remainingBalance);
+      if (req.body.paymentRecords !== undefined) current.paymentRecords = req.body.paymentRecords;
+
       list[idx] = current;
       localStore.writeCustomers(list);
 
@@ -458,6 +464,11 @@ exports.updateCustomer = async (req, res) => {
         loan.totalAmount = loan.dailyEMI * loan.totalEMI;
         loan.remainingBalance = Math.max(0, loan.totalAmount - (loan.totalPaid || 0));
       }
+
+      if (req.body.paidEMI !== undefined) loan.paidEMI = Number(req.body.paidEMI);
+      if (req.body.totalPaid !== undefined) loan.totalPaid = Number(req.body.totalPaid);
+      if (req.body.remainingBalance !== undefined) loan.remainingBalance = Number(req.body.remainingBalance);
+      if (req.body.paymentRecords !== undefined) loan.paymentRecords = req.body.paymentRecords;
       await loan.save();
     }
 

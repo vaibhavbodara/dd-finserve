@@ -137,7 +137,9 @@
         <ng-container matColumnDef="customerId">
           <th mat-header-cell *matHeaderCellDef>Customer ID</th>
           <td mat-cell *matCellDef="let element">
-            <span class="customer-id-pill">{{ element.customerId }}</span>
+            <span class="customer-id-pill clickable-pill" (click)="openCustomerDetails(element)" title="Click to view date-wise payment details">
+              {{ element.customerId }}
+            </span>
           </td>
         </ng-container>
 
@@ -145,10 +147,14 @@
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef>Customer Name</th>
           <td mat-cell *matCellDef="let element">
-            <div class="name-cell">
+            <div class="name-cell clickable-name-cell" (click)="openCustomerDetails(element)" title="Click to view date-wise payment details">
               <div class="avatar-circle">{{ element.name.charAt(0).toUpperCase() }}</div>
               <div class="name-details">
-                <span class="customer-name-text">{{ element.name }}</span>
+                <span class="customer-name-text link-text">{{ element.name }}</span>
+                <span class="view-history-hint">
+                  <mat-icon class="hint-icon">event_available</mat-icon>
+                  <span>View Payments</span>
+                </span>
               </div>
             </div>
           </td>
@@ -283,6 +289,9 @@
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let element">
             <div class="actions-group">
+              <button mat-icon-button class="action-btn view-btn" (click)="openCustomerDetails(element)" matTooltip="View Date-wise Payment Schedule">
+                <mat-icon>visibility</mat-icon>
+              </button>
               <button mat-icon-button class="action-btn edit-btn" (click)="editCustomer(element)" matTooltip="Edit details">
                 <mat-icon>edit</mat-icon>
               </button>

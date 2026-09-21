@@ -16,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CustomerEntry } from '../../models/customer.model';
 import { CustomerService } from '../../services/customer.service';
 import { CustomerDialogComponent } from '../customer-dialog/customer-dialog.component';
+import { CustomerDetailDialogComponent } from '../customer-detail-dialog/customer-detail-dialog.component';
 
 @Component({
   selector: 'app-customer-list',
@@ -177,6 +178,22 @@ export class CustomerListComponent implements OnInit {
           },
         });
       }
+    });
+  }
+
+  openCustomerDetails(customer: CustomerEntry) {
+    const dialogRef = this.dialog.open(CustomerDetailDialogComponent, {
+      width: '1150px',
+      maxWidth: '96vw',
+      height: '90vh',
+      maxHeight: '92vh',
+      autoFocus: false,
+      data: { ...customer },
+      panelClass: 'customer-detail-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe(() => {
+      this.loadCustomers();
     });
   }
 

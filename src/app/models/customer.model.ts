@@ -7,6 +7,18 @@ export interface KycDocument {
 
 export type EmiFrequency = 'Daily' | 'Weekly' | 'Monthly';
 
+export interface PaymentRecord {
+  installmentNo: number;
+  scheduledDate: string | Date;
+  amount: number;
+  status: 'Paid' | 'Pending' | 'Overdue' | 'Upcoming';
+  paidDate?: string | Date;
+  paidAmount?: number;
+  paymentMode?: string;
+  collectorName?: string;
+  notes?: string;
+}
+
 export interface CustomerEntry {
   _id?: string;
   customerId: string;
@@ -30,6 +42,7 @@ export interface CustomerEntry {
   status: 'Active' | 'Completed' | 'Overdue';
   createdAt?: string | Date;
   notes?: string;
+  paymentRecords?: PaymentRecord[];
 }
 
 export interface ApiResponse<T> {

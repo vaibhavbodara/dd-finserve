@@ -1,0 +1,414 @@
+<div class="customer-detail-modal">
+
+  <!-- Modal Header -->
+  <div class="modal-header">
+    <div class="customer-headline">
+      <div class="customer-avatar">
+        {{ customer.name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="customer-identity">
+        <div class="name-status-row">
+          <h2 class="customer-name-heading">{{ customer.name }}</h2>
+          <span class="customer-id-tag">{{ customer.customerId }}</span>
+          <span
+            class="status-pill"
+            [ngClass]="{
+              'status-active': customer.status === 'Active',
+              'status-completed': customer.status === 'Completed',
+              'status-overdue': customer.status === 'Overdue'
+            }"
+          >
+            <mat-icon class="status-dot">
+              {{ customer.status === 'Completed' ? 'task_alt' : (customer.status === 'Overdue' ? 'warning' : 'check_circle') }}
+            </mat-icon>
+            {{ customer.status }}
+          </span>
+        </div>
+        <div class="contact-details-row">
+          <span class="contact-item">
+            <mat-icon>phone_android</mat-icon>
+            <a href="tel:{{ customer.mobileNumber }}" class="phone-link">{{ customer.mobileNumber }}</a>
+          </span>
+          <span class="dot-separator">&bull;</span>
+          <span class="contact-item">
+            <mat-icon>location_on</mat-icon>
+            <span>{{ customer.address }}</span>
+          </span>
+          <span class="dot-separator">&bull;</span>
+          <span class="contact-item">
+            <mat-icon>support_agent</mat-icon>
+            <span>Collector: <strong>{{ customer.collectorName || 'Agent Rahul' }}</strong></span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button mat-icon-button (click)="exportToCsv()" matTooltip="Export Ledger (CSV / Excel)">
+        <mat-icon>file_download</mat-icon>
+      </button>
+      <button mat-icon-button (click)="printStatement()" matTooltip="Print Ledger Statement">
+        <mat-icon>print</mat-icon>
+      </button>
+      <button mat-icon-button (click)="close()" class="close-btn" matTooltip="Close">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-body-scrollable">
+
+    <!-- KPI Summary Cards Row -->
+    <div class="kpi-grid">
+      <!-- 1. Loan Amount Disbursed -->
+      <div class="kpi-card">
+        <div class="kpi-icon-box bg-blue">
+          <mat-icon>payments</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Loan Disbursed</span>
+          <strong class="kpi-value text-blue">₹{{ customer.loanAmount | number }}</strong>
+          <span class="kpi-sub">Original Principal</span>
+        </div>
+      </div>
+
+      <!-- 2. Total Payable -->
+      <div class="kpi-card">
+        <div class="kpi-icon-box bg-purple">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Total to Repay</span>
+          <strong class="kpi-value">₹{{ totalAmountCalculated | number }}</strong>
+          <span class="kpi-sub">Principal + Fixed Interest</span>
+        </div>
+      </div>
+
+      <!-- 3. Total Received So Far -->
+      <div class="kpi-card highlight-success">
+        <div class="kpi-icon-box bg-green">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Total Received</span>
+          <strong class="kpi-value text-green">₹{{ totalPaidCalculated | number }}</strong>
+          <span class="kpi-sub">{{ paidInstallmentsCount }} of {{ schedule.length }} EMIs Paid</span>
+        </div>
+      </div>
+
+      <!-- 4. Remaining Balance -->
+      <div class="kpi-card highlight-balance">
+        <div class="kpi-icon-box bg-amber">
+          <mat-icon>pending_actions</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Remaining Balance</span>
+          <strong class="kpi-value text-amber">₹{{ remainingBalanceCalculated | number }}</strong>
+          <span class="kpi-sub">
+            @if (overdueInstallmentsCount > 0) {
+              <span class="text-danger font-bold">{{ overdueInstallmentsCount }} Overdue</span>
+            } @else {
+              <span>{{ pendingInstallmentsCount }} Pending</span>
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loan Spec Info Bar & Repayment Progress -->
+    <div class="progress-and-specs-card">
+      <div class="specs-chips-row">
+        <div class="spec-item">
+          <span class="spec-label">Plan Type:</span>
+          <span class="spec-badge plan-badge">
+            <mat-icon>{{ customer.emiType === 'Weekly' ? 'date_range' : (customer.emiType === 'Monthly' ? 'calendar_month' : 'today') }}</mat-icon>
+            {{ customer.emiType || 'Daily' }} Collection
+          </span>
+        </div>
+
+        <div class="spec-item">
+          <span class="spec-label">EMI Amount:</span>
+          <strong class="spec-value text-primary">₹{{ (customer.dailyEMI || customer.emiAmount || 0) | number }} / {{ customer.emiType === 'Weekly' ? 'week' : (customer.emiType === 'Monthly' ? 'month' : 'day') }}</strong>
+        </div>
+
+        <div class="spec-item">
+          <span class="spec-label">Tenure:</span>
+          <strong class="spec-value">{{ customer.totalEMI }} {{ customer.emiType === 'Weekly' ? 'Weeks' : (customer.emiType === 'Monthly' ? 'Months' : 'Days') }}</strong>
+        </div>
+
+        <div class="spec-item">
+          <span class="spec-label">Start Date:</span>
+          <strong class="spec-value">{{ customer.loanStartDate | date:'dd MMM yyyy' }}</strong>
+        </div>
+
+        <div class="spec-item">
+          <span class="spec-label">Maturity Date:</span>
+          <strong class="spec-value">{{ customer.loanEndDate | date:'dd MMM yyyy' }}</strong>
+        </div>
+      </div>
+
+      <!-- Linear Progress Bar -->
+      <div class="progress-section">
+        <div class="progress-labels">
+          <span class="prog-title">Repayment Completion Progress</span>
+          <span class="prog-pct">{{ collectionProgressPercentage }}% ({{ paidInstallmentsCount }}/{{ schedule.length }} Collected)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="collectionProgressPercentage"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Date-wise Payment Schedule Section -->
+    <div class="schedule-card">
+
+      <div class="schedule-header-toolbar">
+        <div class="toolbar-left">
+          <h3 class="section-title">
+            <mat-icon class="title-icon">calendar_month</mat-icon>
+            <span>Date-wise Payment Ledger (तारीख अनुसार भुगतान रिकॉर्ड)</span>
+          </h3>
+          <p class="section-desc">
+            Installment-by-installment record showing whether payment was received for each date.
+          </p>
+        </div>
+
+        <div class="toolbar-right">
+          <button
+            mat-raised-button
+            color="primary"
+            class="btn-collect-next"
+            (click)="collectNextDue()"
+            [disabled]="isSaving || remainingBalanceCalculated <= 0"
+          >
+            <mat-icon>add_task</mat-icon>
+            <span>Collect Next EMI (₹{{ (customer.dailyEMI || customer.emiAmount || 0) | number }})</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters & Search Row -->
+      <div class="filter-controls-row">
+        <!-- Status Tabs -->
+        <div class="status-tabs-pill">
+          <button
+            type="button"
+            class="tab-btn"
+            [class.active]="activeTab === 'all'"
+            (click)="setTab('all')"
+          >
+            All Dates ({{ schedule.length }})
+          </button>
+          <button
+            type="button"
+            class="tab-btn tab-paid"
+            [class.active]="activeTab === 'paid'"
+            (click)="setTab('paid')"
+          >
+            <span class="dot-indicator bg-green"></span>
+            Received ({{ paidInstallmentsCount }})
+          </button>
+          <button
+            type="button"
+            class="tab-btn tab-pending"
+            [class.active]="activeTab === 'pending'"
+            (click)="setTab('pending')"
+          >
+            <span class="dot-indicator bg-amber"></span>
+            Pending ({{ pendingInstallmentsCount }})
+          </button>
+          <button
+            type="button"
+            class="tab-btn tab-overdue"
+            [class.active]="activeTab === 'overdue'"
+            (click)="setTab('overdue')"
+          >
+            <span class="dot-indicator bg-red"></span>
+            Overdue ({{ overdueInstallmentsCount }})
+          </button>
+        </div>
+
+        <!-- Search Input -->
+        <div class="search-box">
+          <mat-icon class="search-icon">search</mat-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilter()"
+            placeholder="Search by date, month, or installment #..."
+            class="search-input"
+          />
+          @if (searchQuery) {
+            <button type="button" class="clear-search-btn" (click)="searchQuery = ''; applyFilter()">
+              <mat-icon>close</mat-icon>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Date-wise Installments Table -->
+      <div class="table-responsive">
+        <table class="ledger-table">
+          <thead>
+            <tr>
+              <th class="th-num">#</th>
+              <th class="th-date">Date (तारीख)</th>
+              <th class="th-emi">Amount (देय राशि)</th>
+              <th class="th-status">Status (स्थिति)</th>
+              <th class="th-paid">Received Amount (प्राप्त राशि)</th>
+              <th class="th-paytype">Payment Type (भुगतान प्रकार)</th>
+              <th class="th-time">Received Date (जमा तारीख)</th>
+              <th class="th-action text-right">Action (कार्रवाई)</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredSchedule; track row.installmentNo) {
+              <tr
+                class="ledger-row"
+                [class.row-paid]="row.status === 'Paid'"
+                [class.row-overdue]="row.status === 'Overdue'"
+                [class.row-pending]="row.status === 'Pending'"
+              >
+                <!-- Installment # -->
+                <td class="td-num">
+                  <span class="installment-number-badge">#{{ row.installmentNo }}</span>
+                </td>
+
+                <!-- Date -->
+                <td class="td-date">
+                  <div class="date-cell-wrapper">
+                    <strong class="date-main">{{ row.scheduledDate | date:'dd MMM yyyy' }}</strong>
+                    <span class="date-weekday">{{ row.scheduledDate | date:'EEEE' }}</span>
+                  </div>
+                </td>
+
+                <!-- Amount -->
+                <td class="td-emi">
+                  <strong class="emi-amount-text">₹{{ row.amount | number }}</strong>
+                </td>
+
+                <!-- Status (Received / Pending / Overdue) -->
+                <td class="td-status">
+                  @if (row.status === 'Paid') {
+                    <span class="badge-status badge-paid">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Received</span>
+                    </span>
+                  } @else if (row.status === 'Overdue') {
+                    <span class="badge-status badge-overdue">
+                      <mat-icon>warning</mat-icon>
+                      <span>Overdue</span>
+                    </span>
+                  } @else if (row.status === 'Pending') {
+                    <span class="badge-status badge-due-today">
+                      <mat-icon>schedule</mat-icon>
+                      <span>Pending (Due Today)</span>
+                    </span>
+                  } @else {
+                    <span class="badge-status badge-upcoming">
+                      <mat-icon>event</mat-icon>
+                      <span>Pending (Upcoming)</span>
+                    </span>
+                  }
+                </td>
+
+                <!-- Received Amount -->
+                <td class="td-paid">
+                  @if (row.status === 'Paid') {
+                    <strong class="paid-amount-text text-green">₹{{ (row.paidAmount || row.amount) | number }}</strong>
+                  } @else {
+                    <span class="text-pending-zero">₹0</span>
+                  }
+                </td>
+
+                <!-- Payment Type -->
+                <td class="td-paytype">
+                  <div class="paytype-cell">
+                    <span class="plan-tag">
+                      <mat-icon class="plan-mini-icon">{{ customer.emiType === 'Weekly' ? 'date_range' : (customer.emiType === 'Monthly' ? 'calendar_month' : 'today') }}</mat-icon>
+                      {{ customer.emiType || 'Daily' }} EMI
+                    </span>
+                    @if (row.status === 'Paid') {
+                      <span class="paymode-pill">{{ row.paymentMode || 'Cash' }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Received Date -->
+                <td class="td-time">
+                  @if (row.paidDate) {
+                    <span class="received-time-text">{{ row.paidDate | date:'dd MMM yyyy, hh:mm a' }}</span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+
+                <!-- Action Button -->
+                <td class="td-action text-right">
+                  @if (row.status !== 'Paid') {
+                    <button
+                      type="button"
+                      class="btn-mark-paid"
+                      (click)="markAsReceived(row, $event)"
+                      [disabled]="isSaving"
+                      matTooltip="Click to mark payment as Received for this date"
+                    >
+                      <mat-icon>check</mat-icon>
+                      <span>Mark Received</span>
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn-undo-paid"
+                      (click)="markAsUnpaid(row, $event)"
+                      [disabled]="isSaving"
+                      matTooltip="Click to revert to Unpaid if marked by mistake"
+                    >
+                      <mat-icon>undo</mat-icon>
+                      <span>Mark Unpaid</span>
+                    </button>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-schedule-cell">
+                  <div class="empty-state">
+                    <mat-icon>event_busy</mat-icon>
+                    <h4>No installment records found for selected filter</h4>
+                    <p>Try switching to "All Dates" or clear your search term.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Modal Footer -->
+  <div class="modal-footer">
+    <div class="footer-left">
+      <span class="save-status-indicator" *ngIf="isSaving">
+        <mat-icon class="spin-icon">sync</mat-icon> Saving update...
+      </span>
+      <span class="footer-summary" *ngIf="!isSaving">
+        Showing <strong>{{ filteredSchedule.length }}</strong> of <strong>{{ schedule.length }}</strong> installments &bull; Collected: <strong class="text-green">₹{{ totalPaidCalculated | number }}</strong>
+      </span>
+    </div>
+
+    <div class="footer-right">
+      <button mat-stroked-button (click)="exportToCsv()">
+        <mat-icon>file_download</mat-icon>
+        <span>Export CSV</span>
+      </button>
+      <button mat-raised-button color="primary" (click)="close()">
+        <span>Done / Close</span>
+      </button>
+    </div>
+  </div>
+
+</div>
