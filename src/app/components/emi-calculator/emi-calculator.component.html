@@ -8,7 +8,10 @@
         <mat-icon class="bc-arrow">chevron_right</mat-icon>
         <span class="bc-current">EMI Calculator</span>
       </div>
-      <h1 class="page-title">EMI Calculator & Customer Consultation</h1>
+      <h1 class="page-title">EMI Calculator & Loan Amortization</h1>
+      <p class="page-subtitle">
+        Standard EMI calculations for Daily, Weekly, and Monthly loans with Fixed Interest Rate (% per annum).
+      </p>
     </div>
 
     <div class="header-right">
@@ -42,8 +45,7 @@
       <!-- 1. Collection Frequency Selector -->
       <div class="input-group freq-group">
         <label class="group-label">
-          <span>Collection Frequency</span>
-          <span class="label-hint">EMI वसूली का प्रकार</span>
+          <span>Collection Frequency (EMI वसूली का प्रकार)</span>
         </label>
         <div class="freq-toggle-row">
           <button
@@ -55,7 +57,7 @@
             <mat-icon>today</mat-icon>
             <div class="freq-btn-text">
               <strong>Daily</strong>
-              <span>प्रति दिन</span>
+              <span>प्रति दिन (365/yr)</span>
             </div>
           </button>
 
@@ -68,7 +70,7 @@
             <mat-icon>date_range</mat-icon>
             <div class="freq-btn-text">
               <strong>Weekly</strong>
-              <span>प्रति सप्ताह</span>
+              <span>प्रति सप्ताह (52/yr)</span>
             </div>
           </button>
 
@@ -81,18 +83,36 @@
             <mat-icon>calendar_month</mat-icon>
             <div class="freq-btn-text">
               <strong>Monthly</strong>
-              <span>प्रति माह</span>
+              <span>प्रति माह (12/yr)</span>
             </div>
           </button>
         </div>
       </div>
 
-      <!-- 2. Loan Amount (Principal) -->
+      <!-- 2. Interest Rate Type Selector -->
+      <div class="input-group">
+        <label class="group-label">
+          <span>Interest Rate Type (ब्याज गणना का प्रकार)</span>
+        </label>
+        <div class="select-wrapper">
+          <select
+            [(ngModel)]="interestRateType"
+            (ngModelChange)="calculateAll()"
+            class="native-select"
+          >
+            <option value="fixed">Fixed Interest Rate (वार्षिक स्थिर दर - % p.a. on Principal)</option>
+          </select>
+        </div>
+        <p class="input-helper-text">
+          <span>ℹ️ <strong>Fixed Rate:</strong> Interest calculated on original principal using annual rate: (P × R × Years) / 100.</span>
+        </p>
+      </div>
+
+      <!-- 3. Loan Amount (Principal) -->
       <div class="input-group">
         <div class="group-header-row">
           <label class="group-label">
-            <span>Loan Amount (Principal)</span>
-            <span class="label-hint">ऋण मूलधन राशि</span>
+            <span>Loan Amount (ऋण मूलधन राशि)</span>
           </label>
           <div class="currency-input-wrapper">
             <span class="currency-prefix">₹</span>
@@ -103,7 +123,7 @@
               class="number-input"
               step="1000"
               min="500"
-              max="1000000"
+              max="10000000"
             />
           </div>
         </div>
@@ -113,10 +133,17 @@
           [(ngModel)]="loanAmount"
           (ngModelChange)="calculateAll()"
           min="1000"
-          max="200000"
+          max="500000"
           step="1000"
           class="custom-slider"
         />
+
+        @if (amountInWords) {
+          <div class="amount-in-words-box">
+            <mat-icon class="words-icon">spellcheck</mat-icon>
+            <span class="words-text">{{ amountInWords }}</span>
+          </div>
+        }
 
         <div class="preset-chips-row">
           <span class="chips-label">Quick:</span>
@@ -133,12 +160,12 @@
         </div>
       </div>
 
-      <!-- 3. Flat Interest Rate (%) -->
+      <!-- 4. Interest Rate (% per annum) -->
       <div class="input-group">
         <div class="group-header-row">
           <label class="group-label">
-            <span>Flat Interest Rate</span>
-            <span class="label-hint">सीधा ब्याज दर (%)</span>
+            <span>Interest Rate ({{ interestRateType === 'flat_tenure' ? '% Flat' : '% per annum' }})</span>
+            <span class="label-hint">वार्षिक ब्याज दर</span>
           </label>
           <div class="rate-input-wrapper">
             <input
@@ -146,11 +173,11 @@
               [(ngModel)]="interestRate"
               (ngModelChange)="calculateAll()"
               class="number-input"
-              step="0.5"
-              min="0"
+              step="0.1"
+              min="0.1"
               max="50"
             />
-            <span class="percent-suffix">%</span>
+            <span class="percent-suffix">% {{ interestRateType === 'flat_tenure' ? 'flat' : 'p.a.' }}</span>
           </div>
         </div>
 
@@ -158,8 +185,8 @@
           type="range"
           [(ngModel)]="interestRate"
           (ngModelChange)="calculateAll()"
-          min="0"
-          max="30"
+          min="1"
+          max="36"
           step="0.5"
           class="custom-slider slider-accent"
         />
@@ -179,12 +206,11 @@
         </div>
       </div>
 
-      <!-- 4. Tenure / Duration -->
+      <!-- 5. Loan Tenure with Unit Selector -->
       <div class="input-group">
         <div class="group-header-row">
           <label class="group-label">
-            <span>Tenure ({{ tenureUnit }})</span>
-            <span class="label-hint">अवधि / कुल किश्तें ({{ hindiFrequencyText }})</span>
+            <span>Loan Tenure (अवधि / कुल किश्तें)</span>
           </label>
           <div class="tenure-input-wrapper">
             <input
@@ -195,7 +221,24 @@
               min="1"
               max="365"
             />
-            <span class="tenure-suffix">{{ tenureUnit }}</span>
+            <select
+              [(ngModel)]="tenureUnit"
+              (ngModelChange)="calculateAll()"
+              class="tenure-unit-select"
+            >
+              @if (emiType === 'Daily') {
+                <option value="days">Days</option>
+                <option value="months">Months</option>
+                <option value="years">Years</option>
+              } @else if (emiType === 'Weekly') {
+                <option value="weeks">Weeks</option>
+                <option value="months">Months</option>
+                <option value="years">Years</option>
+              } @else {
+                <option value="months">Months</option>
+                <option value="years">Years</option>
+              }
+            </select>
           </div>
         </div>
 
@@ -203,31 +246,22 @@
           type="range"
           [(ngModel)]="tenure"
           (ngModelChange)="calculateAll()"
-          [min]="emiType === 'Daily' ? 10 : (emiType === 'Weekly' ? 4 : 1)"
-          [max]="emiType === 'Daily' ? 180 : (emiType === 'Weekly' ? 52 : 36)"
+          [min]="tenureUnit === 'days' ? 10 : (tenureUnit === 'weeks' ? 4 : 1)"
+          [max]="tenureUnit === 'days' ? 365 : (tenureUnit === 'weeks' ? 104 : (tenureUnit === 'months' ? 60 : 10))"
           step="1"
           class="custom-slider"
         />
 
-        <div class="preset-chips-row">
-          <span class="chips-label">Tenures:</span>
-          @for (preset of activeTenurePresets; track preset.value) {
-            <button
-              type="button"
-              class="chip-btn"
-              [class.chip-active]="tenure === preset.value"
-              (click)="setTenure(preset.value)"
-            >
-              {{ preset.label }}
-            </button>
-          }
+        <div class="tenure-summary-tag">
+          <span>Total Installments: <strong>{{ totalPeriods }} {{ emiType }} payments</strong></span>
+          <span class="tenure-years-calc">Duration: ~{{ tenureYears | number:'1.1-2' }} years</span>
         </div>
       </div>
 
-      <!-- 5. Loan Start Date -->
+      <!-- 6. EMI Start Date -->
       <div class="input-group date-input-group">
         <label class="group-label">
-          <span>Loan Start Date (ऋण प्रारंभ तिथि)</span>
+          <span>EMI Start Date (प्रारंभ तिथि)</span>
         </label>
         <div class="date-row">
           <input
@@ -245,12 +279,12 @@
 
     </div>
 
-    <!-- RIGHT COLUMN: Customer Quotation Card & Visual Summary -->
+    <!-- RIGHT COLUMN: Results Section (styled like emicalculatorapp.com) -->
     <div class="quotation-card" id="quotationSlip">
       <div class="quotation-header">
         <div class="quote-brand">
           <div class="quote-badge">DD FINSERVE</div>
-          <span class="quote-tagline">Loan & EMI Quotation Slip</span>
+          <span class="quote-tagline">Loan & Repayment Summary</span>
         </div>
         @if (customerNameQuote) {
           <div class="quote-client-tag">
@@ -260,21 +294,67 @@
         }
       </div>
 
-      <!-- Big Highlighted EMI Figure -->
-      <div class="hero-emi-box">
-        <span class="hero-emi-label">PAYABLE PER {{ frequencyUnit | uppercase }}</span>
-        <div class="hero-emi-amount">
-          <span class="rupee-symbol">₹</span>
-          <span class="amount-number">{{ emiAmount | number }}</span>
-          <span class="hero-unit">/ {{ frequencyUnit }}</span>
+      <!-- Top 3 Metric Cards (matching emicalculatorapp.com) -->
+      <div class="emicalc-metrics-grid">
+        <div class="emicalc-card card-installment">
+          <span class="emicalc-card-label">{{ emiType }} Payment</span>
+          <div class="emicalc-card-value text-emerald">
+            <span class="cur-sym">₹</span>{{ emiAmount | number:'1.2-2' }}
+          </div>
+          <span class="emicalc-card-sub">every {{ frequencyUnit }}</span>
         </div>
-        <div class="hero-tenure-tag">
-          <mat-icon>replay</mat-icon>
-          <span>For {{ tenure }} {{ tenureUnit }} ({{ emiType }} Collection)</span>
+
+        <div class="emicalc-card card-interest">
+          <span class="emicalc-card-label">Total Interest</span>
+          <div class="emicalc-card-value text-amber">
+            <span class="cur-sym">₹</span>{{ totalInterest | number }}
+          </div>
+          <span class="emicalc-card-sub">cost of borrowing</span>
+        </div>
+
+        <div class="emicalc-card card-repayment">
+          <span class="emicalc-card-label">Total Repayment</span>
+          <div class="emicalc-card-value text-blue">
+            <span class="cur-sym">₹</span>{{ totalPayable | number }}
+          </div>
+          <span class="emicalc-card-sub">principal + interest</span>
         </div>
       </div>
 
-      <!-- Two-Color Ratio Bar -->
+      <!-- Key Insights Grid (matching emicalculatorapp.com) -->
+      <div class="key-insights-wrapper">
+        <div class="insights-title-row">
+          <mat-icon class="insights-icon">insights</mat-icon>
+          <span class="insights-title">Key Insights</span>
+        </div>
+
+        <div class="key-insights-grid">
+          <div class="insight-box">
+            <span class="ins-label">Loan Principal</span>
+            <strong class="ins-value">₹{{ loanAmount | number }}</strong>
+          </div>
+          <div class="insight-box">
+            <span class="ins-label">Interest Paid</span>
+            <strong class="ins-value text-amber">₹{{ totalInterest | number }}</strong>
+          </div>
+          <div class="insight-box">
+            <span class="ins-label">Interest Rate</span>
+            <strong class="ins-value">{{ interestRate }}% {{ interestRateType === 'flat_tenure' ? 'flat' : 'p.a.' }}</strong>
+          </div>
+          <div class="insight-box">
+            <span class="ins-label">Total Amount</span>
+            <strong class="ins-value text-emerald">₹{{ totalPayable | number }}</strong>
+          </div>
+        </div>
+
+        <!-- Info Bar (matching emicalculatorapp.com) -->
+        <div class="emicalc-info-bar">
+          <span>Interest to Principal Ratio: <b>{{ interestRatio }}%</b></span>
+          <span>Total Payments: <b>{{ totalPeriods }} {{ emiType | lowercase }} payments</b></span>
+        </div>
+      </div>
+
+      <!-- Ratio Bar -->
       <div class="ratio-breakdown-card">
         <div class="ratio-bar-header">
           <span class="ratio-title">Payment Ratio</span>
@@ -289,44 +369,11 @@
         </div>
       </div>
 
-      <!-- Detailed Numbers Grid -->
-      <div class="quote-details-grid">
-        <div class="detail-tile">
-          <span class="detail-label">Loan Principal (मूलधन)</span>
-          <strong class="detail-value text-blue">₹{{ loanAmount | number }}</strong>
-        </div>
-
-        <div class="detail-tile">
-          <span class="detail-label">Flat Rate (ब्याज दर)</span>
-          <strong class="detail-value text-amber">{{ interestRate }}% Flat</strong>
-        </div>
-
-        <div class="detail-tile">
-          <span class="detail-label">Total Flat Interest (कुल ब्याज)</span>
-          <strong class="detail-value text-rose">₹{{ totalInterest | number }}</strong>
-        </div>
-
-        <div class="detail-tile highlight-total">
-          <span class="detail-label">Total Amount to Pay (कुल देय राशि)</span>
-          <strong class="detail-value text-emerald">₹{{ totalPayable | number }}</strong>
-        </div>
-
-        <div class="detail-tile">
-          <span class="detail-label">Disbursement Date</span>
-          <strong class="detail-value">{{ startDate | date:'mediumDate' }}</strong>
-        </div>
-
-        <div class="detail-tile">
-          <span class="detail-label">Final Maturity Date</span>
-          <strong class="detail-value">{{ calculatedEndDate | date:'mediumDate' }}</strong>
-        </div>
-      </div>
-
       <!-- Action Buttons Row -->
       <div class="quote-actions-row">
         <button mat-stroked-button class="quote-btn btn-copy" (click)="copyQuotationText()" title="Copy formatted quote for WhatsApp">
           <mat-icon>content_copy</mat-icon>
-          <span>Copy for WhatsApp</span>
+          <span>Copy Quote</span>
         </button>
 
         <button mat-stroked-button class="quote-btn btn-print" (click)="printQuotation()" title="Print quotation slip">
@@ -336,7 +383,7 @@
 
         <button mat-raised-button color="primary" class="quote-btn btn-apply" (click)="openOnboardDialogWithCurrentValues()">
           <mat-icon>check_circle</mat-icon>
-          <span>Onboard with this Loan</span>
+          <span>Onboard Customer</span>
         </button>
       </div>
 
@@ -344,34 +391,44 @@
 
   </div>
 
-  <!-- SECTION 2: Customer Explanation Step-by-Step Breakdown -->
+  <!-- SECTION 2: Customer Explanation Breakdown -->
   <div class="explanation-section">
     <div class="section-title-bar">
       <div class="title-with-icon">
         <mat-icon class="sec-icon text-indigo">school</mat-icon>
         <div>
-          <h2 class="sec-title">How This Loan Works (Customer Explanation Guide)</h2>
-          <p class="sec-desc">ग्राहक को आसान भाषा में ऋण एवं किश्त की गणना समझाने के 4 चरण</p>
+          <h2 class="sec-title">Calculation Method & Customer Explanation Guide</h2>
+          <p class="sec-desc">
+            Current calculation mode:
+            <strong>
+              {{ interestRateType === 'reduced' ? 'Reduced Balance (% p.a. - Banking Standard)' : (interestRateType === 'fixed' ? 'Fixed Rate (% p.a. Annualized)' : 'Flat Microfinance Fee') }}
+            </strong>
+          </p>
         </div>
       </div>
       <div class="formula-pill">
-        <span>Total = Principal + (Principal × Rate %)</span>
+        @if (interestRateType === 'reduced') {
+          <span>EMI = P × r × (1+r)ⁿ / ((1+r)ⁿ - 1) [r = {{ interestRate }}% / {{ periodsPerYear }}]</span>
+        } @else if (interestRateType === 'fixed') {
+          <span>Interest = (P × R% × {{ tenureYears | number:'1.2-2' }} yrs) / 100</span>
+        } @else {
+          <span>Interest = (P × R%) / 100</span>
+        }
       </div>
     </div>
 
     <div class="steps-grid">
-
       <!-- Step 1 -->
       <div class="step-card">
         <div class="step-badge step-1">1</div>
         <div class="step-icon-circle bg-blue">
           <mat-icon>savings</mat-icon>
         </div>
-        <h3 class="step-title">1. Loan Disbursed</h3>
-        <p class="step-hindi">कर्ज राशि (हाथ में मिलने वाली रकम)</p>
+        <h3 class="step-title">1. Principal Disbursed</h3>
+        <p class="step-hindi">कर्ज राशि (Borrower receives in hand)</p>
         <div class="step-highlight text-blue">₹{{ loanAmount | number }}</div>
         <p class="step-explanation">
-          Customer gets <strong>₹{{ loanAmount | number }}</strong> credited or in cash on loan approval.
+          Net loan amount disbursed to borrower on approval.
         </p>
       </div>
 
@@ -381,11 +438,11 @@
         <div class="step-icon-circle bg-amber">
           <mat-icon>calculate</mat-icon>
         </div>
-        <h3 class="step-title">2. Flat Interest Calculation</h3>
-        <p class="step-hindi">सीधा ब्याज गणना ({{ interestRate }}% दर पर)</p>
+        <h3 class="step-title">2. Total Interest Cost</h3>
+        <p class="step-hindi">कुल ब्याज लागत ({{ interestRate }}% p.a.)</p>
         <div class="step-highlight text-amber">₹{{ totalInterest | number }}</div>
         <p class="step-explanation">
-          Calculation: ₹{{ loanAmount | number }} × {{ interestRate }}% = <strong>₹{{ totalInterest | number }}</strong> total interest for entire period.
+          Total cost of borrowing across {{ totalPeriods }} {{ emiType | lowercase }} installments.
         </p>
       </div>
 
@@ -395,11 +452,11 @@
         <div class="step-icon-circle bg-rose">
           <mat-icon>payments</mat-icon>
         </div>
-        <h3 class="step-title">3. Total Repayment Amount</h3>
-        <p class="step-hindi">कुल लौटाई जाने वाली राशि</p>
+        <h3 class="step-title">3. Total Repayment</h3>
+        <p class="step-hindi">कुल लौटाई जाने वाली रकम</p>
         <div class="step-highlight text-rose">₹{{ totalPayable | number }}</div>
         <p class="step-explanation">
-          Principal (₹{{ loanAmount | number }}) + Interest (₹{{ totalInterest | number }}) = <strong>₹{{ totalPayable | number }}</strong> total to return.
+          Principal (₹{{ loanAmount | number }}) + Interest (₹{{ totalInterest | number }}).
         </p>
       </div>
 
@@ -409,25 +466,24 @@
         <div class="step-icon-circle bg-emerald">
           <mat-icon>event_repeat</mat-icon>
         </div>
-        <h3 class="step-title">4. Installment Distribution</h3>
+        <h3 class="step-title">4. {{ emiType }} Installment</h3>
         <p class="step-hindi">प्रति किश्त भुगतान ({{ emiType }})</p>
-        <div class="step-highlight text-emerald">₹{{ emiAmount | number }} / {{ frequencyUnit }}</div>
+        <div class="step-highlight text-emerald">₹{{ emiAmount | number:'1.2-2' }} / {{ frequencyUnit }}</div>
         <p class="step-explanation">
-          ₹{{ totalPayable | number }} divided by {{ tenure }} installments = <strong>₹{{ emiAmount | number }}</strong> payable each {{ frequencyUnit }}.
+          Total payable distributed across {{ totalPeriods }} installments.
         </p>
       </div>
-
     </div>
   </div>
 
-  <!-- SECTION 3: Multi-Frequency Plan Comparison -->
+  <!-- SECTION 3: Multi-Frequency Comparison Grid -->
   <div class="comparison-section">
     <div class="section-title-bar">
       <div class="title-with-icon">
         <mat-icon class="sec-icon text-blue">compare_arrows</mat-icon>
         <div>
           <h2 class="sec-title">Flexible Collection Comparison for ₹{{ loanAmount | number }}</h2>
-          <p class="sec-desc">Compare Daily, Weekly, and Monthly collection plans to help customer choose</p>
+          <p class="sec-desc">Compare Daily, Weekly, and Monthly plans at {{ interestRate }}% {{ interestRateType === 'flat_tenure' ? 'flat' : 'p.a.' }}</p>
         </div>
       </div>
     </div>
@@ -448,20 +504,21 @@
               </div>
             </div>
             @if (emiType === plan.frequency) {
-              <span class="active-pill">Active Selected</span>
+              <span class="active-pill">Currently Selected</span>
             }
           </div>
 
           <div class="plan-body">
             <div class="plan-emi-val">
               <span class="p-curr">₹</span>
-              <span class="p-num">{{ plan.emiAmount | number }}</span>
+              <span class="p-num">{{ plan.emiAmount | number:'1.2-2' }}</span>
               <span class="p-per">/ {{ plan.emiUnit }}</span>
             </div>
 
             <div class="plan-meta-row">
               <span class="p-meta">Tenure: <strong>{{ plan.tenure }} {{ plan.tenureUnit }}</strong></span>
-              <span class="p-meta">Total Payable: <strong>₹{{ totalPayable | number }}</strong></span>
+              <span class="p-meta">Total Interest: <strong class="text-amber">₹{{ plan.totalInterest | number }}</strong></span>
+              <span class="p-meta">Total Payable: <strong>₹{{ plan.totalPayable | number }}</strong></span>
             </div>
           </div>
 
@@ -478,27 +535,38 @@
     </div>
   </div>
 
-  <!-- SECTION 4: Installment-by-Installment Repayment Schedule -->
+  <!-- SECTION 4: Amortization Schedule with Export to Excel -->
   <div class="schedule-section">
     <div class="section-title-bar">
       <div class="title-with-icon">
         <mat-icon class="sec-icon text-emerald">receipt_long</mat-icon>
         <div>
-          <h2 class="sec-title">Repayment Amortization Schedule (किश्त-दर-किश्त सूची)</h2>
+          <h2 class="sec-title">Amortization Schedule (किश्त-दर-किश्त विवरण)</h2>
           <p class="sec-desc">
-            Full installment schedule from Start Date to Maturity Date for transparency
+            Complete repayment breakdown showing installment, principal, interest, and remaining balance.
           </p>
         </div>
       </div>
 
       <div class="schedule-actions">
+        <!-- Export to Excel Button (matching emicalculatorapp.com) -->
+        <button
+          mat-stroked-button
+          class="export-excel-btn"
+          (click)="exportScheduleToCsv()"
+          title="Download schedule as CSV / Excel"
+        >
+          <mat-icon>file_download</mat-icon>
+          <span>Export to Excel</span>
+        </button>
+
         <button
           mat-button
           class="toggle-schedule-btn"
           (click)="showAllSchedule = !showAllSchedule"
         >
           <mat-icon>{{ showAllSchedule ? 'unfold_less' : 'unfold_more' }}</mat-icon>
-          <span>{{ showAllSchedule ? 'Show First 10 Installments' : 'Show All ' + tenure + ' Installments' }}</span>
+          <span>{{ showAllSchedule ? 'Show First 10' : 'Show All ' + totalPeriods + ' Installments' }}</span>
         </button>
       </div>
     </div>
@@ -509,9 +577,9 @@
           <tr>
             <th>Installment #</th>
             <th>Due Date</th>
-            <th>EMI Amount</th>
-            <th>Principal Component</th>
-            <th>Interest Component</th>
+            <th>Payment (EMI)</th>
+            <th>Principal Paid</th>
+            <th>Interest Paid</th>
             <th>Remaining Balance</th>
           </tr>
         </thead>
@@ -525,17 +593,17 @@
                 <span class="date-text">{{ item.dueDate | date:'mediumDate' }}</span>
               </td>
               <td>
-                <strong class="emi-text text-emerald">₹{{ item.emiAmount | number }}</strong>
+                <strong class="emi-text text-emerald">₹{{ item.emiAmount | number:'1.2-2' }}</strong>
               </td>
               <td>
-                <span class="part-text">₹{{ item.principalPortion | number }}</span>
+                <span class="part-text text-blue">₹{{ item.principalPortion | number:'1.2-2' }}</span>
               </td>
               <td>
-                <span class="part-text text-amber">₹{{ item.interestPortion | number }}</span>
+                <span class="part-text text-amber">₹{{ item.interestPortion | number:'1.2-2' }}</span>
               </td>
               <td>
                 <strong class="balance-text" [class.balance-zero]="item.remainingBalance === 0">
-                  ₹{{ item.remainingBalance | number }}
+                  ₹{{ item.remainingBalance | number:'1.2-2' }}
                 </strong>
               </td>
             </tr>

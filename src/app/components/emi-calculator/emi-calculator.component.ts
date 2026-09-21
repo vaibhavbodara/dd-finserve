@@ -16,6 +16,8 @@ import { CustomerDialogComponent } from '../customer-dialog/customer-dialog.comp
 import { CustomerService } from '../../services/customer.service';
 import { CustomerEntry, EmiFrequency } from '../../models/customer.model';
 
+export type InterestRateType = 'reduced' | 'fixed' | 'flat_tenure';
+
 export interface ScheduleItem {
   installmentNo: number;
   dueDate: Date;
@@ -33,6 +35,8 @@ export interface PlanComparison {
   tenureUnit: string;
   emiAmount: number;
   emiUnit: string;
+  totalInterest: number;
+  totalPayable: number;
   icon: string;
 }
 
@@ -65,62 +69,105 @@ export class EmiCalculatorComponent implements OnInit {
 
   // Inputs
   loanAmount: number = 10000;
-  interestRate: number = 10;
+  interestRate: number = 10.5; // % per annum by default
+  interestRateType: InterestRateType = 'fixed'; // 'reduced' (emicalculatorapp default) | 'fixed' | 'flat_tenure'
   emiType: EmiFrequency = 'Daily';
   tenure: number = 100;
+  tenureUnit: 'days' | 'weeks' | 'months' | 'years' = 'days';
   startDate: string = new Date().toISOString().split('T')[0];
 
-  // Preset values
-  loanPresets: number[] = [5000, 10000, 20000, 30000, 50000, 100000];
-  ratePresets: number[] = [5, 8, 10, 12, 15, 20];
+  // Presets
+  loanPresets: number[] = [5000, 10000, 20000, 50000, 100000, 500000];
+  ratePresets: number[] = [8.5, 10.5, 12, 14, 18, 24];
 
-  // Frequency specific tenure presets
-  dailyTenurePresets = [
-    { label: '30 Days (1 Mo)', value: 30 },
-    { label: '50 Days', value: 50 },
-    { label: '60 Days (2 Mo)', value: 60 },
-    { label: '100 Days (Standard)', value: 100 },
-    { label: '120 Days (4 Mo)', value: 120 },
-  ];
-
-  weeklyTenurePresets = [
-    { label: '8 Weeks (~2 Mo)', value: 8 },
-    { label: '12 Weeks (~3 Mo)', value: 12 },
-    { label: '16 Weeks (~4 Mo)', value: 16 },
-    { label: '24 Weeks (~6 Mo)', value: 24 },
-    { label: '52 Weeks (1 Year)', value: 52 },
-  ];
-
-  monthlyTenurePresets = [
-    { label: '3 Months', value: 3 },
-    { label: '6 Months', value: 6 },
-    { label: '9 Months', value: 9 },
-    { label: '12 Months (1 Year)', value: 12 },
-    { label: '24 Months (2 Years)', value: 24 },
-  ];
-
-  // Display Schedule toggle
+  // UI state
   showAllSchedule: boolean = false;
-
-  // Active comparison modal or tab
   customerNameQuote: string = '';
 
   ngOnInit() {
+    this.syncTenureDefaults('Daily');
     this.calculateAll();
   }
 
-  // Calculated getters
-  get totalInterest(): number {
-    return Math.round((Number(this.loanAmount) * Number(this.interestRate)) / 100);
+  // Frequency Periods per Year (matching emicalculatorapp.com)
+  get periodsPerYear(): number {
+    if (this.emiType === 'Daily') return 365;
+    if (this.emiType === 'Weekly') return 52;
+    return 12; // Monthly
   }
 
-  get totalPayable(): number {
-    return Number(this.loanAmount) + this.totalInterest;
-  }
-
-  get emiAmount(): number {
+  // Tenure in Years
+  get tenureYears(): number {
     const t = Number(this.tenure) || 1;
-    return Math.ceil(this.totalPayable / t);
+    if (this.tenureUnit === 'days') return t / 365;
+    if (this.tenureUnit === 'weeks') return t / 52;
+    if (this.tenureUnit === 'months') return t / 12;
+    return t; // years
+  }
+
+  // Total Installment Count / Periods
+  get totalPeriods(): number {
+    const p = Math.round(this.tenureYears * this.periodsPerYear);
+    return Math.max(1, p);
+  }
+
+  // Period Interest Rate
+  get periodRate(): number {
+    return (Number(this.interestRate) || 0) / this.periodsPerYear / 100;
+  }
+
+  // Calculated Installment Payment (matching emicalculatorapp.com)
+  get emiAmount(): number {
+    const P = Number(this.loanAmount) || 0;
+    const N = this.totalPeriods;
+    const r = this.periodRate;
+    const R = Number(this.interestRate) || 0;
+
+    if (P <= 0 || N <= 0) return 0;
+
+    if (this.interestRateType === 'fixed') {
+      // Fixed Interest Rate (% per annum on original principal)
+      const totalInt = (P * R * this.tenureYears) / 100;
+      return Math.round(((P + totalInt) / N) * 100) / 100;
+    } else if (this.interestRateType === 'flat_tenure') {
+      // Flat Microfinance Fee (% on Principal for entire loan)
+      const totalInt = (P * R) / 100;
+      return Math.round(((P + totalInt) / N) * 100) / 100;
+    } else {
+      // Reduced Balance (standard reducing balance formula)
+      if (r === 0) return Math.round((P / N) * 100) / 100;
+      const factor = Math.pow(1 + r, N);
+      const emi = (P * r * factor) / (factor - 1);
+      return Math.round(emi * 100) / 100;
+    }
+  }
+
+  // Total Repayment Amount
+  get totalPayable(): number {
+    if (this.interestRateType === 'fixed') {
+      const P = Number(this.loanAmount) || 0;
+      const R = Number(this.interestRate) || 0;
+      return Math.round(P + (P * R * this.tenureYears) / 100);
+    } else if (this.interestRateType === 'flat_tenure') {
+      const P = Number(this.loanAmount) || 0;
+      const R = Number(this.interestRate) || 0;
+      return Math.round(P + (P * R) / 100);
+    } else {
+      return Math.round(this.emiAmount * this.totalPeriods);
+    }
+  }
+
+  // Total Interest Cost
+  get totalInterest(): number {
+    const P = Number(this.loanAmount) || 0;
+    return Math.max(0, Math.round(this.totalPayable - P));
+  }
+
+  // Interest to Principal Ratio (%)
+  get interestRatio(): number {
+    const P = Number(this.loanAmount) || 0;
+    if (P <= 0) return 0;
+    return Math.round((this.totalInterest / P) * 1000) / 10;
   }
 
   get principalPercentage(): number {
@@ -139,10 +186,11 @@ export class EmiCalculatorComponent implements OnInit {
     return 'Day';
   }
 
-  get tenureUnit(): string {
-    if (this.emiType === 'Weekly') return 'Weeks';
-    if (this.emiType === 'Monthly') return 'Months';
-    return 'Days';
+  get tenureUnitLabel(): string {
+    if (this.tenureUnit === 'days') return 'Days';
+    if (this.tenureUnit === 'weeks') return 'Weeks';
+    if (this.tenureUnit === 'months') return 'Months';
+    return 'Years';
   }
 
   get hindiFrequencyText(): string {
@@ -153,74 +201,114 @@ export class EmiCalculatorComponent implements OnInit {
 
   get calculatedEndDate(): Date {
     const start = new Date(this.startDate || new Date());
-    const count = Number(this.tenure) || 1;
     const end = new Date(start);
 
-    if (this.emiType === 'Weekly') {
-      end.setDate(end.getDate() + count * 7);
-    } else if (this.emiType === 'Monthly') {
-      end.setMonth(end.getMonth() + count);
+    if (this.tenureUnit === 'days') {
+      end.setDate(end.getDate() + Number(this.tenure));
+    } else if (this.tenureUnit === 'weeks') {
+      end.setDate(end.getDate() + Number(this.tenure) * 7);
+    } else if (this.tenureUnit === 'months') {
+      end.setMonth(end.getMonth() + Number(this.tenure));
     } else {
-      end.setDate(end.getDate() + count);
+      end.setFullYear(end.getFullYear() + Number(this.tenure));
     }
     return end;
   }
 
-  get activeTenurePresets() {
-    if (this.emiType === 'Weekly') return this.weeklyTenurePresets;
-    if (this.emiType === 'Monthly') return this.monthlyTenurePresets;
-    return this.dailyTenurePresets;
+  // Amount in Words (Indian Format)
+  get amountInWords(): string {
+    return this.convertNumberToWordsIndian(Number(this.loanAmount) || 0);
   }
 
-  // Cross Frequency Comparisons
+  convertNumberToWordsIndian(num: number): string {
+    if (num <= 0) return '';
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+      'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const numToWords = (n: number): string => {
+      if (n === 0) return '';
+      if (n < 20) return ones[n] + ' ';
+      if (n < 100) return tens[Math.floor(n / 10)] + ' ' + ones[n % 10] + (ones[n % 10] ? ' ' : '');
+      if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred ' + numToWords(n % 100);
+      if (n < 100000) return numToWords(Math.floor(n / 1000)) + 'Thousand ' + numToWords(n % 1000);
+      if (n < 10000000) return numToWords(Math.floor(n / 100000)) + 'Lakh ' + numToWords(n % 100000);
+      return numToWords(Math.floor(n / 10000000)) + 'Crore ' + numToWords(n % 10000000);
+    };
+
+    return numToWords(Math.floor(num)).trim() + ' Rupees';
+  }
+
+  // Multi-frequency comparison cards
   get planComparisons(): PlanComparison[] {
-    const principal = Number(this.loanAmount) || 0;
-    const rate = Number(this.interestRate) || 0;
-    const payable = principal + Math.round((principal * rate) / 100);
+    const P = Number(this.loanAmount) || 0;
+    const R = Number(this.interestRate) || 0;
+    const type = this.interestRateType;
+
+    const calcPlan = (freq: EmiFrequency, t: number, u: 'days' | 'weeks' | 'months'): PlanComparison => {
+      const ppy = freq === 'Daily' ? 365 : (freq === 'Weekly' ? 52 : 12);
+      const ty = u === 'days' ? t / 365 : (u === 'weeks' ? t / 52 : t / 12);
+      const periods = Math.round(ty * ppy);
+      const pr = R / ppy / 100;
+      let inst = 0;
+      let totPay = 0;
+
+      if (type === 'fixed') {
+        const intAmt = (P * R * ty) / 100;
+        totPay = P + intAmt;
+        inst = totPay / periods;
+      } else if (type === 'flat_tenure') {
+        const intAmt = (P * R) / 100;
+        totPay = P + intAmt;
+        inst = totPay / periods;
+      } else {
+        if (pr === 0) inst = P / periods;
+        else {
+          const factor = Math.pow(1 + pr, periods);
+          inst = (P * pr * factor) / (factor - 1);
+        }
+        totPay = inst * periods;
+      }
+
+      return {
+        frequency: freq,
+        title: freq === 'Daily' ? 'Daily Collection' : (freq === 'Weekly' ? 'Weekly Collection' : 'Monthly Collection'),
+        hindiTitle: freq === 'Daily' ? 'दैनिक किश्त' : (freq === 'Weekly' ? 'साप्ताहिक किश्त' : 'मासिक किश्त'),
+        tenure: t,
+        tenureUnit: u === 'days' ? 'Days' : (u === 'weeks' ? 'Weeks' : 'Months'),
+        emiAmount: Math.round(inst * 100) / 100,
+        emiUnit: freq === 'Daily' ? 'per Day' : (freq === 'Weekly' ? 'per Week' : 'per Month'),
+        totalInterest: Math.round(totPay - P),
+        totalPayable: Math.round(totPay),
+        icon: freq === 'Daily' ? 'today' : (freq === 'Weekly' ? 'date_range' : 'calendar_month'),
+      };
+    };
 
     return [
-      {
-        frequency: 'Daily',
-        title: 'Daily Collection',
-        hindiTitle: 'दैनिक किश्त',
-        tenure: 100,
-        tenureUnit: 'Days',
-        emiAmount: Math.ceil(payable / 100),
-        emiUnit: 'per Day',
-        icon: 'today',
-      },
-      {
-        frequency: 'Weekly',
-        title: 'Weekly Collection',
-        hindiTitle: 'साप्ताहिक किश्त',
-        tenure: 12,
-        tenureUnit: 'Weeks',
-        emiAmount: Math.ceil(payable / 12),
-        emiUnit: 'per Week',
-        icon: 'date_range',
-      },
-      {
-        frequency: 'Monthly',
-        title: 'Monthly Collection',
-        hindiTitle: 'मासिक किश्त',
-        tenure: 6,
-        tenureUnit: 'Months',
-        emiAmount: Math.ceil(payable / 6),
-        emiUnit: 'per Month',
-        icon: 'calendar_month',
-      },
+      calcPlan('Daily', 100, 'days'),
+      calcPlan('Weekly', 12, 'weeks'),
+      calcPlan('Monthly', 6, 'months'),
     ];
   }
 
-  // Schedule list
+  // Detailed Amortization Schedule (matching emicalculatorapp.com)
   get schedule(): ScheduleItem[] {
     const list: ScheduleItem[] = [];
-    const count = Math.min(Number(this.tenure) || 1, 365); // Cap to 365 for memory
+    const P = Number(this.loanAmount) || 0;
+    const totalP = this.totalPeriods;
     const emi = this.emiAmount;
-    const principalPerEmi = Math.round(Number(this.loanAmount) / count);
-    const interestPerEmi = emi - principalPerEmi;
-    let balance = this.totalPayable;
+    const pr = this.periodRate;
+    const R = Number(this.interestRate) || 0;
+    const type = this.interestRateType;
+
+    let balance = P;
     const baseDate = new Date(this.startDate || new Date());
+    const fixedIntPerPeriod = type === 'fixed'
+      ? (P * R * this.tenureYears) / 100 / totalP
+      : (P * R) / 100 / totalP;
+
+    // Cap at 365 periods to prevent browser slowdown
+    const count = Math.min(totalP, 365);
 
     for (let i = 1; i <= count; i++) {
       const curDate = new Date(baseDate);
@@ -232,17 +320,36 @@ export class EmiCalculatorComponent implements OnInit {
         curDate.setDate(curDate.getDate() + i);
       }
 
-      const installmentEmi = i === count ? balance : emi;
-      balance = Math.max(0, balance - installmentEmi);
+      let interestPart = 0;
+      let principalPart = 0;
+
+      if (type === 'fixed' || type === 'flat_tenure') {
+        interestPart = fixedIntPerPeriod;
+        principalPart = emi - interestPart;
+      } else {
+        // Reduced Balance
+        interestPart = balance * pr;
+        principalPart = emi - interestPart;
+      }
+
+      balance = balance - principalPart;
+      if (balance < 0 || i === count) {
+        if (i === count && balance !== 0) {
+          principalPart += balance;
+        }
+        balance = 0;
+      }
 
       list.push({
         installmentNo: i,
         dueDate: curDate,
-        emiAmount: installmentEmi,
-        principalPortion: principalPerEmi,
-        interestPortion: interestPerEmi,
-        remainingBalance: balance,
+        emiAmount: Math.round(emi * 100) / 100,
+        principalPortion: Math.max(0, Math.round(principalPart * 100) / 100),
+        interestPortion: Math.max(0, Math.round(interestPart * 100) / 100),
+        remainingBalance: Math.max(0, Math.round(balance * 100) / 100),
       });
+
+      if (balance <= 0) break;
     }
 
     return list;
@@ -255,16 +362,28 @@ export class EmiCalculatorComponent implements OnInit {
     return this.schedule.slice(0, 10);
   }
 
-  // Action methods
+  // Frequency change handler
   setFrequency(freq: EmiFrequency) {
     this.emiType = freq;
+    this.syncTenureDefaults(freq);
+    this.calculateAll();
+  }
+
+  syncTenureDefaults(freq: EmiFrequency) {
     if (freq === 'Daily') {
+      this.tenureUnit = 'days';
       this.tenure = 100;
     } else if (freq === 'Weekly') {
+      this.tenureUnit = 'weeks';
       this.tenure = 12;
     } else if (freq === 'Monthly') {
+      this.tenureUnit = 'months';
       this.tenure = 6;
     }
+  }
+
+  setInterestRateType(type: InterestRateType) {
+    this.interestRateType = type;
     this.calculateAll();
   }
 
@@ -292,24 +411,56 @@ export class EmiCalculatorComponent implements OnInit {
   applyPlan(plan: PlanComparison) {
     this.emiType = plan.frequency;
     this.tenure = plan.tenure;
+    this.tenureUnit = plan.frequency === 'Daily' ? 'days' : (plan.frequency === 'Weekly' ? 'weeks' : 'months');
     this.calculateAll();
-    this.snackBar.open(`Switched calculation to ${plan.title} (${plan.tenure} ${plan.tenureUnit})`, 'OK', {
+    this.snackBar.open(`Switched to ${plan.title} (${plan.tenure} ${plan.tenureUnit})`, 'OK', {
       duration: 2500,
     });
   }
 
+  // Export Amortization Schedule to CSV / Excel (matching emicalculatorapp.com)
+  exportScheduleToCsv() {
+    const rows = [
+      ['Installment #', 'Due Date', 'Payment (EMI)', 'Principal Paid', 'Interest Paid', 'Remaining Balance'],
+      ...this.schedule.map((s) => [
+        s.installmentNo,
+        s.dueDate.toISOString().split('T')[0],
+        s.emiAmount,
+        s.principalPortion,
+        s.interestPortion,
+        s.remainingBalance,
+      ]),
+    ];
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + rows.map((e) => e.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `DD_Finserve_EMI_Schedule_${this.loanAmount}_${this.emiType}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.snackBar.open('Amortization Schedule exported to Excel / CSV!', 'OK', { duration: 3000 });
+  }
+
   copyQuotationText() {
     const customerPrefix = this.customerNameQuote ? `Customer: ${this.customerNameQuote}\n` : '';
+    const rateTypeLabel = this.interestRateType === 'reduced'
+      ? 'Reduced Balance (% p.a.)'
+      : (this.interestRateType === 'fixed' ? 'Fixed Rate (% p.a.)' : 'Flat Microfinance Fee');
+
     const text =
       `*DD FINSERVE - LOAN & EMI QUOTATION*\n` +
       `───────────────────────────────\n` +
       customerPrefix +
       `💰 Loan Principal Amount: ₹${this.loanAmount.toLocaleString('en-IN')}\n` +
-      `📊 Flat Interest Rate: ${this.interestRate}%\n` +
-      `➕ Total Flat Interest: ₹${this.totalInterest.toLocaleString('en-IN')}\n` +
+      `📝 Amount in Words: ${this.amountInWords}\n` +
+      `📊 Interest Rate: ${this.interestRate}% (${rateTypeLabel})\n` +
+      `➕ Total Interest Cost: ₹${this.totalInterest.toLocaleString('en-IN')}\n` +
       `💳 Total Amount to Repay: ₹${this.totalPayable.toLocaleString('en-IN')}\n` +
       `───────────────\n` +
-      `⏱️ Repayment Plan: ${this.emiType} (${this.tenure} ${this.tenureUnit})\n` +
+      `⏱️ Repayment Plan: ${this.emiType} (${this.tenure} ${this.tenureUnitLabel})\n` +
       `💵 EMI per ${this.frequencyUnit}: ₹${this.emiAmount.toLocaleString('en-IN')}\n` +
       `📅 Loan Start Date: ${new Date(this.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}\n` +
       `🏁 Maturity Date: ${this.calculatedEndDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}\n` +
@@ -324,9 +475,7 @@ export class EmiCalculatorComponent implements OnInit {
         });
       })
       .catch(() => {
-        this.snackBar.open('Could not copy automatically. You can copy the quote summary directly.', 'Close', {
-          duration: 3000,
-        });
+        this.snackBar.open('Could not copy automatically.', 'Close', { duration: 3000 });
       });
   }
 
@@ -341,8 +490,8 @@ export class EmiCalculatorComponent implements OnInit {
       interestRate: this.interestRate,
       totalAmount: this.totalPayable,
       emiType: this.emiType,
-      totalEMI: this.tenure,
-      dailyEMI: this.emiAmount,
+      totalEMI: this.totalPeriods,
+      dailyEMI: Math.ceil(this.emiAmount),
       loanStartDate: new Date(this.startDate),
       loanEndDate: this.calculatedEndDate,
       status: 'Active',

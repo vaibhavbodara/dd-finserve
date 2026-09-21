@@ -55,12 +55,12 @@
 
         <!-- Email Field -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email Address / Staff ID</mat-label>
+          <mat-label style="color: white;">Email Address / Staff ID</mat-label>
           <input
             matInput
             type="email"
             formControlName="email"
-            placeholder="admin@ddfinserve.com"
+            placeholder="Enter your email or staff ID"
             autocomplete="email"
           />
           <mat-icon matPrefix class="input-icon">mail_outline</mat-icon>
@@ -70,12 +70,12 @@
 
         <!-- Password Field -->
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Password</mat-label>
+          <mat-label style="color: white;">Password</mat-label>
           <input
             matInput
             [type]="hidePassword ? 'password' : 'text'"
             formControlName="password"
-            placeholder="••••••••"
+            placeholder="Enter your password"
             autocomplete="current-password"
           />
           <mat-icon matPrefix class="input-icon">lock_outline</mat-icon>
@@ -125,29 +125,6 @@
 
       </form>
 
-      <!-- 1-Click Demo Accounts -->
-      <div class="demo-section">
-        <div class="demo-divider">
-          <span>Quick 1-Click Demo Login</span>
-        </div>
-
-        <div class="demo-cards-row">
-          @for (acc of demoAccounts; track acc.email) {
-            <button
-              type="button"
-              class="demo-account-chip"
-              (click)="fillDemo(acc)"
-              title="Click to fill credentials"
-            >
-              <mat-icon class="demo-chip-icon">{{ acc.icon }}</mat-icon>
-              <div class="demo-chip-text">
-                <span class="demo-chip-label">{{ acc.label }}</span>
-                <span class="demo-chip-email">{{ acc.email }}</span>
-              </div>
-            </button>
-          }
-        </div>
-      </div>
 
     </div>
 

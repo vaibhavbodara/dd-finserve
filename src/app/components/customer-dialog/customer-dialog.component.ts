@@ -117,7 +117,7 @@ export class CustomerDialogComponent implements OnInit {
     const defaultEnd = this.calculateEndDateValue(new Date(), initialTenure, initialEmiType);
 
     const initialPrincipal = Number(this.data?.loanAmount) || 10000;
-    const initialRate = 10;
+    const initialRate = this.data?.interestRate !== undefined ? Number(this.data.interestRate) : 10;
     const initialTotalPayable = this.data?.totalAmount || Math.round(initialPrincipal + (initialPrincipal * initialRate) / 100);
 
     this.form = this.fb.group({
