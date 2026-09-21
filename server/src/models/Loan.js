@@ -18,6 +18,10 @@ const loanSchema = new mongoose.Schema(
       required: [true, 'Loan amount is required'],
       min: [100, 'Loan amount must be at least 100'],
     },
+    interestRate: {
+      type: Number,
+      default: 0,
+    },
     emiType: {
       type: String,
       enum: ['Daily', 'Weekly', 'Monthly'],

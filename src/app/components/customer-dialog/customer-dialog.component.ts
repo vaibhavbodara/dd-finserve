@@ -90,15 +90,26 @@ export class CustomerDialogComponent implements OnInit {
     },
   ];
 
+  private isCalculating = false;
+
   get selectedEmiConfig(): EmiTypeOption {
     const selected = this.form?.get('emiType')?.value || 'Daily';
     return this.emiTypeOptions.find((o) => o.value === selected) || this.emiTypeOptions[0];
   }
 
+  get periodsPerYear(): number {
+    const selected = (this.form?.get('emiType')?.value as EmiFrequency) || 'Daily';
+    if (selected === 'Weekly') return 52;
+    if (selected === 'Monthly') return 12;
+    return 365;
+  }
+
   get calculatedInterestAmount(): number {
     const principal = Number(this.form?.get('loanAmount')?.value) || 0;
     const rate = Number(this.form?.get('interestRate')?.value) || 0;
-    return Math.round((principal * rate) / 100);
+    const tenure = Number(this.form?.get('totalEMI')?.value) || 1;
+    const tenureYears = tenure / this.periodsPerYear;
+    return Math.round((principal * rate * tenureYears) / 100);
   }
 
   constructor(
@@ -114,11 +125,16 @@ export class CustomerDialogComponent implements OnInit {
     const initialEmiType: EmiFrequency = this.data?.emiType || 'Daily';
     const config = this.emiTypeOptions.find((o) => o.value === initialEmiType) || this.emiTypeOptions[0];
     const initialTenure = this.data?.totalEMI || config.defaultTenure;
-    const defaultEnd = this.calculateEndDateValue(new Date(), initialTenure, initialEmiType);
+    const defaultEnd = this.data?.loanEndDate
+      ? new Date(this.data.loanEndDate)
+      : this.calculateEndDateValue(new Date(), initialTenure, initialEmiType);
 
     const initialPrincipal = Number(this.data?.loanAmount) || 10000;
-    const initialRate = this.data?.interestRate !== undefined ? Number(this.data.interestRate) : 10;
-    const initialTotalPayable = this.data?.totalAmount || Math.round(initialPrincipal + (initialPrincipal * initialRate) / 100);
+    const initialRate = this.data?.interestRate !== undefined ? Number(this.data.interestRate) : 10.5;
+    const ppy = initialEmiType === 'Weekly' ? 52 : (initialEmiType === 'Monthly' ? 12 : 365);
+    const initialInterest = Math.round((initialPrincipal * initialRate * (initialTenure / ppy)) / 100);
+    const initialTotalPayable = this.data?.totalAmount || (initialPrincipal + initialInterest);
+    const initialEMI = this.data?.dailyEMI || (initialTenure > 0 ? Math.round(((initialTotalPayable / initialTenure) + Number.EPSILON) * 100) / 100 : 100);
 
     this.form = this.fb.group({
       customerId: [this.data?.customerId || this.generateSuggestedId()],
@@ -126,13 +142,13 @@ export class CustomerDialogComponent implements OnInit {
       mobileNumber: [this.data?.mobileNumber || '', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       address: [this.data?.address || '', [Validators.required]],
       loanAmount: [initialPrincipal, [Validators.required, Validators.min(100)]],
-      interestRate: [initialRate, [Validators.min(0)]], // 10% flat microfinance
+      interestRate: [initialRate, [Validators.min(0)]], // Fixed % p.a.
       totalAmount: [initialTotalPayable, [Validators.required, Validators.min(100)]],
       emiType: [initialEmiType, [Validators.required]],
       totalEMI: [initialTenure, [Validators.required, Validators.min(1)]],
-      dailyEMI: [this.data?.dailyEMI || 110, [Validators.required, Validators.min(1)]],
+      dailyEMI: [initialEMI, [Validators.required, Validators.min(1)]],
       loanStartDate: [this.data?.loanStartDate ? new Date(this.data.loanStartDate) : new Date(), [Validators.required]],
-      loanEndDate: [this.data?.loanEndDate ? new Date(this.data.loanEndDate) : defaultEnd, [Validators.required]],
+      loanEndDate: [defaultEnd, [Validators.required]],
       collectorName: [this.data?.collectorName || 'Agent Rahul', [Validators.required]],
       status: [this.data?.status || 'Active', [Validators.required]],
     });
@@ -142,35 +158,48 @@ export class CustomerDialogComponent implements OnInit {
       this.uploadedFileName = this.data.kycDocument.fileName;
     }
 
-    // Auto calculate Total Payable and EMI when Loan Amount or Interest Rate changes
+    // 1. Changes to Principal or Rate -> recalculate total payable, EMI, and end date
     this.form.get('loanAmount')?.valueChanges.subscribe(() => {
-      this.recalculateTotalPayable();
+      this.recalculateFromParameters();
     });
     this.form.get('interestRate')?.valueChanges.subscribe(() => {
-      this.recalculateTotalPayable();
+      this.recalculateFromParameters();
     });
-    // If user modifies Total Payable Amount, auto update EMI
-    this.form.get('totalAmount')?.valueChanges.subscribe(() => {
-      this.recalculateEMI();
-    });
-    this.form.get('totalEMI')?.valueChanges.subscribe(() => {
-      this.recalculateEMI();
-      this.recalculateEndDate();
-    });
-    this.form.get('loanStartDate')?.valueChanges.subscribe(() => this.recalculateEndDate());
 
-    // When Collection Frequency dropdown changes, adapt default tenure and recalculate
+    // 2. Frequency change -> adjust default tenure and recalculate
     this.form.get('emiType')?.valueChanges.subscribe((newType: EmiFrequency) => {
       const opt = this.emiTypeOptions.find((o) => o.value === newType);
       if (opt && !this.isEditMode) {
         this.form.patchValue({ totalEMI: opt.defaultTenure }, { emitEvent: false });
       }
-      this.recalculateEMI();
+      this.recalculateFromParameters();
+    });
+
+    // 3. User modifies Tenure (Total EMI) directly -> recalculate interest, total payable, and EMI
+    this.form.get('totalEMI')?.valueChanges.subscribe(() => {
+      this.recalculateFromParameters();
+    });
+
+    // 4. User modifies EMI Amount (e.g. types round figure 1000 instead of 875.25)
+    // -> tenure reduces, total interest reduces, and end date becomes earlier
+    this.form.get('dailyEMI')?.valueChanges.subscribe(() => {
+      this.recalculateFromCustomEMI();
+    });
+
+    // 5. User directly modifies Total Payable Amount -> recalculate installment
+    this.form.get('totalAmount')?.valueChanges.subscribe(() => {
+      this.onTotalAmountManualChange();
+    });
+
+    // 6. Loan Start Date changes -> recalculate end date
+    this.form.get('loanStartDate')?.valueChanges.subscribe(() => {
       this.recalculateEndDate();
     });
 
-    // Run initial recalculation
-    this.recalculateTotalPayable();
+    // Initial sync if no preset values passed
+    if (!this.data || !this.data.totalAmount) {
+      this.recalculateFromParameters();
+    }
   }
 
   generateSuggestedId(): string {
@@ -190,26 +219,102 @@ export class CustomerDialogComponent implements OnInit {
     return endDate;
   }
 
-  recalculateTotalPayable() {
-    const principal = Number(this.form.get('loanAmount')?.value) || 0;
-    const rate = Number(this.form.get('interestRate')?.value) || 0;
-    const interest = Math.round((principal * rate) / 100);
-    const total = principal + interest;
-    this.form.patchValue({ totalAmount: total }, { emitEvent: false });
-    this.recalculateEMI();
+  // Base calculation: Fixed Rate (% p.a. on Principal)
+  // Interest = (Principal * Rate * TenureYears) / 100
+  recalculateFromParameters() {
+    if (this.isCalculating || !this.form) return;
+    this.isCalculating = true;
+
+    try {
+      const principal = Number(this.form.get('loanAmount')?.value) || 0;
+      const rate = Number(this.form.get('interestRate')?.value) || 0;
+      const tenure = Number(this.form.get('totalEMI')?.value) || 1;
+      const emiType = (this.form.get('emiType')?.value as EmiFrequency) || 'Daily';
+      const ppy = emiType === 'Weekly' ? 52 : (emiType === 'Monthly' ? 12 : 365);
+
+      const tenureYears = tenure / ppy;
+      const interest = Math.round((principal * rate * tenureYears) / 100);
+      const totalPayable = principal + interest;
+      const emi = tenure > 0 ? Math.round(((totalPayable / tenure) + Number.EPSILON) * 100) / 100 : 0;
+
+      const startDateVal = this.form.get('loanStartDate')?.value || new Date();
+      const endDate = this.calculateEndDateValue(new Date(startDateVal), tenure, emiType);
+
+      this.form.patchValue(
+        {
+          totalAmount: totalPayable,
+          dailyEMI: emi,
+          loanEndDate: endDate,
+        },
+        { emitEvent: false }
+      );
+    } finally {
+      this.isCalculating = false;
+    }
   }
 
-  recalculateEMI() {
-    const totalPayable = Number(this.form.get('totalAmount')?.value) || 0;
-    const installments = Number(this.form.get('totalEMI')?.value) || 1;
+  // When customer gives custom / round figure payment (e.g. ₹1,000 instead of ₹875.25):
+  // Since they pay more per installment, loan pays off faster.
+  // Formula: N = Principal / (CustomEMI - InterestPerPeriod)
+  // With fewer installments N, tenure in years is smaller -> total interest REDUCES, total payable REDUCES, and end date is EARLIER!
+  recalculateFromCustomEMI() {
+    if (this.isCalculating || !this.form) return;
+    this.isCalculating = true;
 
-    if (totalPayable > 0 && installments > 0) {
-      const emi = Math.ceil(totalPayable / installments);
-      this.form.patchValue({ dailyEMI: emi }, { emitEvent: false });
+    try {
+      const principal = Number(this.form.get('loanAmount')?.value) || 0;
+      const rate = Number(this.form.get('interestRate')?.value) || 0;
+      const customEMI = Number(this.form.get('dailyEMI')?.value) || 0;
+      const emiType = (this.form.get('emiType')?.value as EmiFrequency) || 'Daily';
+      const ppy = emiType === 'Weekly' ? 52 : (emiType === 'Monthly' ? 12 : 365);
+
+      if (principal <= 0 || customEMI <= 0) return;
+
+      const interestPerPeriod = (principal * rate) / (100 * ppy);
+
+      if (customEMI > interestPerPeriod) {
+        const rawTenure = principal / (customEMI - interestPerPeriod);
+        const newTenure = Math.max(1, Math.ceil(rawTenure));
+
+        const tenureYears = newTenure / ppy;
+        const newInterest = Math.round((principal * rate * tenureYears) / 100);
+        const newTotalPayable = principal + newInterest;
+
+        const startDateVal = this.form.get('loanStartDate')?.value || new Date();
+        const newEndDate = this.calculateEndDateValue(new Date(startDateVal), newTenure, emiType);
+
+        this.form.patchValue(
+          {
+            totalEMI: newTenure,
+            totalAmount: newTotalPayable,
+            loanEndDate: newEndDate,
+          },
+          { emitEvent: false }
+        );
+      }
+    } finally {
+      this.isCalculating = false;
+    }
+  }
+
+  onTotalAmountManualChange() {
+    if (this.isCalculating || !this.form) return;
+    this.isCalculating = true;
+
+    try {
+      const totalPayable = Number(this.form.get('totalAmount')?.value) || 0;
+      const tenure = Number(this.form.get('totalEMI')?.value) || 1;
+      if (totalPayable > 0 && tenure > 0) {
+        const emi = Math.round(((totalPayable / tenure) + Number.EPSILON) * 100) / 100;
+        this.form.patchValue({ dailyEMI: emi }, { emitEvent: false });
+      }
+    } finally {
+      this.isCalculating = false;
     }
   }
 
   recalculateEndDate() {
+    if (this.isCalculating || !this.form) return;
     const startVal = this.form.get('loanStartDate')?.value;
     const tenure = Number(this.form.get('totalEMI')?.value) || 0;
     const emiType = (this.form.get('emiType')?.value as EmiFrequency) || 'Daily';
@@ -277,6 +382,7 @@ export class CustomerDialogComponent implements OnInit {
       mobileNumber: val.mobileNumber.trim(),
       address: val.address.trim(),
       loanAmount: Number(val.loanAmount),
+      interestRate: Number(val.interestRate),
       totalAmount: Number(val.totalAmount),
       remainingBalance: Number(val.totalAmount),
       emiType: val.emiType,

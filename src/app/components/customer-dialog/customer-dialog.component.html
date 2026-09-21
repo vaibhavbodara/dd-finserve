@@ -90,10 +90,10 @@
 
           <!-- Interest Rate (%) -->
           <mat-form-field appearance="outline">
-            <mat-label>Interest Rate (%)</mat-label>
-            <input matInput type="number" formControlName="interestRate" placeholder="e.g. 10" />
-            <span matSuffix>%&nbsp;</span>
-            <mat-hint>Flat rate added to principal</mat-hint>
+            <mat-label>Interest Rate (% p.a.)</mat-label>
+            <input matInput type="number" formControlName="interestRate" placeholder="e.g. 10.5" />
+            <span matSuffix>% p.a.&nbsp;</span>
+            <mat-hint>Fixed annual rate on principal</mat-hint>
           </mat-form-field>
 
           <!-- Total Payable Amount (Auto-calculated: Principal + Interest) -->
@@ -104,7 +104,7 @@
             <mat-icon matSuffix class="payable-icon">account_balance_wallet</mat-icon>
             <mat-hint class="payable-calc-hint">
               <span>Principal: <strong>₹{{ (form.get('loanAmount')?.value || 0) | number }}</strong></span>
-              <span> + Flat Interest ({{ form.get('interestRate')?.value || 0 }}%): <strong>₹{{ calculatedInterestAmount | number }}</strong></span>
+              <span> + Fixed Interest ({{ form.get('interestRate')?.value || 0 }}% p.a. for {{ form.get('totalEMI')?.value || 0 }} {{ selectedEmiConfig.unit.toLowerCase() }}): <strong>₹{{ calculatedInterestAmount | number }}</strong></span>
               <span> = Total to Collect: <strong class="payable-highlight-text">₹{{ (form.get('totalAmount')?.value || 0) | number }}</strong></span>
             </mat-hint>
             <mat-error *ngIf="form.get('totalAmount')?.hasError('required')">Total payable amount is required</mat-error>
@@ -142,7 +142,7 @@
             <mat-label>{{ selectedEmiConfig.tenureLabel }} *</mat-label>
             <input matInput type="number" formControlName="totalEMI" [placeholder]="selectedEmiConfig.defaultTenure.toString()" />
             <span matSuffix>&nbsp;{{ selectedEmiConfig.unit }}</span>
-            <mat-hint>Standard: {{ selectedEmiConfig.defaultTenure }} {{ selectedEmiConfig.unit.toLowerCase() }} installments</mat-hint>
+            <mat-hint>Tenure: {{ form.get('totalEMI')?.value || 0 }} {{ selectedEmiConfig.unit.toLowerCase() }} installments</mat-hint>
             <mat-error *ngIf="form.get('totalEMI')?.hasError('required')">Tenure installments count is required</mat-error>
           </mat-form-field>
 
@@ -152,7 +152,7 @@
             <input matInput type="number" formControlName="dailyEMI" />
             <span matPrefix class="prefix-currency">₹&nbsp;</span>
             <mat-icon matSuffix color="primary">calculate</mat-icon>
-            <mat-hint class="calc-hint">Auto-calculated (Editable)</mat-hint>
+            <mat-hint class="calc-hint">Type round figure (e.g. 1000) to auto-reduce tenure & interest</mat-hint>
             <mat-error *ngIf="form.get('dailyEMI')?.hasError('required')">EMI amount is required</mat-error>
           </mat-form-field>
 
@@ -170,7 +170,7 @@
             <input matInput [matDatepicker]="endPicker" formControlName="loanEndDate" />
             <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
             <mat-datepicker #endPicker></mat-datepicker>
-            <mat-hint>Auto-calculated from Start Date + {{ form.get('totalEMI')?.value || 0 }} {{ selectedEmiConfig.unit.toLowerCase() }}</mat-hint>
+            <mat-hint>Auto-updates to Start Date + {{ form.get('totalEMI')?.value || 0 }} {{ selectedEmiConfig.unit.toLowerCase() }}</mat-hint>
           </mat-form-field>
 
           <!-- Collector Name -->

@@ -83,6 +83,7 @@ exports.getCustomers = async (req, res) => {
           loanId: loan ? loan._id : null,
           loanNumber: loan ? loan.loanNumber : '',
           loanAmount: loan ? loan.loanAmount : 0,
+          interestRate: loan ? (loan.interestRate || 0) : 0,
           emiType: loan ? (loan.emiType || 'Daily') : 'Daily',
           emiAmount: loan ? (loan.emiAmount || loan.dailyEMI) : 0,
           dailyEMI: loan ? loan.dailyEMI : 0,
@@ -156,6 +157,8 @@ exports.createCustomer = async (req, res) => {
       mobileNumber,
       address,
       loanAmount,
+      totalAmount,
+      interestRate = 0,
       emiType = 'Daily',
       dailyEMI,
       emiAmount,
@@ -178,8 +181,9 @@ exports.createCustomer = async (req, res) => {
     const lAmount = Number(loanAmount) || 0;
     const inputEMI = Number(emiAmount) || Number(dailyEMI) || 0;
     const tEMI = Number(totalEMI) || (emiType === 'Weekly' ? 12 : (emiType === 'Monthly' ? 6 : 100));
-    const calculatedTotalAmount = inputEMI > 0 ? inputEMI * tEMI : lAmount;
-    const calculatedEMI = inputEMI > 0 ? inputEMI : Math.ceil(lAmount / tEMI);
+    const inputTotal = Number(totalAmount) || 0;
+    const calculatedTotalAmount = inputTotal > 0 ? inputTotal : (inputEMI > 0 ? inputEMI * tEMI : lAmount);
+    const calculatedEMI = inputEMI > 0 ? inputEMI : Math.ceil(calculatedTotalAmount / tEMI);
 
     const startDateObj = loanStartDate ? new Date(loanStartDate) : new Date();
     let endDateObj = loanEndDate ? new Date(loanEndDate) : null;
@@ -216,6 +220,7 @@ exports.createCustomer = async (req, res) => {
         kycDocument: kycDocument || { fileName: '', fileType: '', fileData: '' },
         status: status || 'Active',
         loanAmount: lAmount,
+        interestRate: Number(interestRate) || 0,
         emiType: emiType || 'Daily',
         emiAmount: calculatedEMI,
         dailyEMI: calculatedEMI,
@@ -272,6 +277,7 @@ exports.createCustomer = async (req, res) => {
       loan = await Loan.create({
         customer: customer._id,
         loanAmount: lAmount,
+        interestRate: Number(interestRate) || 0,
         emiType: emiType || 'Daily',
         emiAmount: calculatedEMI,
         dailyEMI: calculatedEMI,
@@ -325,6 +331,8 @@ exports.updateCustomer = async (req, res) => {
       mobileNumber,
       address,
       loanAmount,
+      totalAmount,
+      interestRate,
       emiType,
       dailyEMI,
       emiAmount,
@@ -354,6 +362,7 @@ exports.updateCustomer = async (req, res) => {
       if (status) current.status = status;
       if (notes !== undefined) current.notes = notes;
       if (emiType) current.emiType = emiType;
+      if (interestRate !== undefined) current.interestRate = Number(interestRate);
       if (loanAmount !== undefined) current.loanAmount = Number(loanAmount);
       if (emiAmount !== undefined) {
         current.emiAmount = Number(emiAmount);
@@ -378,7 +387,10 @@ exports.updateCustomer = async (req, res) => {
         current.loanEndDate = start.toISOString();
       }
 
-      if (current.dailyEMI && current.totalEMI) {
+      if (totalAmount !== undefined && Number(totalAmount) > 0) {
+        current.totalAmount = Number(totalAmount);
+        current.remainingBalance = Math.max(0, current.totalAmount - (current.totalPaid || 0));
+      } else if (current.dailyEMI && current.totalEMI) {
         current.totalAmount = current.dailyEMI * current.totalEMI;
         current.remainingBalance = Math.max(0, current.totalAmount - (current.totalPaid || 0));
       }
@@ -438,7 +450,11 @@ exports.updateCustomer = async (req, res) => {
       }
       if (collectorName) loan.collectorName = collectorName;
       if (status) loan.status = status;
-      if (loan.dailyEMI && loan.totalEMI) {
+      if (interestRate !== undefined) loan.interestRate = Number(interestRate);
+      if (totalAmount !== undefined && Number(totalAmount) > 0) {
+        loan.totalAmount = Number(totalAmount);
+        loan.remainingBalance = Math.max(0, loan.totalAmount - (loan.totalPaid || 0));
+      } else if (loan.dailyEMI && loan.totalEMI) {
         loan.totalAmount = loan.dailyEMI * loan.totalEMI;
         loan.remainingBalance = Math.max(0, loan.totalAmount - (loan.totalPaid || 0));
       }
