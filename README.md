@@ -1,59 +1,114 @@
-# DdFinserve
+# DD Finserve - Daily EMI Microfinance Web App
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.0.
+A full-stack Finance Web Application built for Daily EMI Collection, Customer KYC Onboarding, Loan Portfolio Management, and Field Agent Collection Tracking.
 
-## Development server
+---
 
-To start a local development server, run:
+## Tech Stack
 
-```bash
-ng serve
+- **Frontend**: Angular 22, Angular Material, TypeScript, HTML5/CSS3
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB (via Mongoose)
+
+---
+
+## Project Structure
+
+```
+dd-finserve/
+├── src/                       # Angular Frontend Source Code
+│   ├── app/
+│   │   ├── components/
+│   │   │   ├── header/        # Firm Brand Header & Logo
+│   │   │   ├── footer/        # Firm Footer & Info
+│   │   │   ├── customer-list/ # 12-Column Table, Metrics & Filters
+│   │   │   └── customer-dialog/# Add Customer Modal with Auto-EMI Calc
+│   │   ├── models/            # TypeScript Interfaces
+│   │   └── services/          # REST API & LocalStorage Fallback Service
+├── server/                    # Node.js + Express Backend
+│   ├── src/
+│   │   ├── config/            # MongoDB Connection Handler
+│   │   ├── models/            # Customer, Loan, Collection Mongoose Schemas
+│   │   ├── controllers/       # Business Logic & Calculations
+│   │   ├── routes/            # REST API Endpoints
+│   │   ├── seed.js            # Sample Data Seeder
+│   │   └── server.js          # Express Entrypoint
+│   ├── .env.example           # Environment Configuration Template
+│   └── package.json           # Backend Dependencies
+├── package.json               # Frontend Dependencies
+└── README.md
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+---
 
-## Code scaffolding
+## How to Setup & Run on Another PC
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
+### 1. Clone the Repository
 ```bash
-ng generate component component-name
+git clone <YOUR-GITHUB-REPO-URL>
+cd dd-finserve
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### 2. Install Dependencies
 
+#### Frontend (Root directory):
 ```bash
-ng generate --help
+npm install
 ```
 
-## Building
-
-To build the project run:
-
+#### Backend (`server` directory):
 ```bash
-ng build
+cd server
+npm install
+cd ..
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+---
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
+### 3. Configure Backend Environment
+Inside the `server/` directory, create a `.env` file (copied from `.env.example`):
 ```bash
-ng test
+cd server
+copy .env.example .env
 ```
 
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
+Edit `server/.env`:
+```env
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/dd_finserve
+# Or for MongoDB Atlas Cloud:
+# MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/dd_finserve?retryWrites=true&w=majority
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+---
 
-## Additional Resources
+### 4. Run the Project
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+#### Step A: Start Backend Server (Terminal 1)
+```bash
+cd server
+npm start
+```
+*Backend runs on `http://localhost:5000`*
+
+*(Optional) Seed sample data:*
+```bash
+cd server
+npm run seed
+```
+
+#### Step B: Start Frontend Web App (Terminal 2)
+In the project root:
+```bash
+npm start
+```
+*Frontend runs on `http://localhost:4200`*
+
+---
+
+## Features
+
+- **Header with DD Finserve Logo**: Custom financial emblem and live API connection status indicator.
+- **Customer Directory Table**: Full table showing Customer ID, Name, Mobile, Address, Loan Amount (₹), Daily EMI (₹), Total EMI (days), Dates, Collector, KYC status, and Status badges.
+- **Add Customer Modal**: Live auto-calculation of Daily EMI and End Date, file upload for KYC documents (Aadhaar/PAN), and mobile validation.
+- **Dual-Mode Persistence**: Automatically uses live MongoDB backend; seamlessly falls back to offline localStorage mode if MongoDB is offline.

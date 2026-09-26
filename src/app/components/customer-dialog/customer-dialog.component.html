@@ -1,0 +1,199 @@
+<div class="dialog-container">
+  <!-- Dialog Header -->
+  <div class="dialog-header">
+    <div class="header-title-group">
+      <div class="header-icon-box">
+        <mat-icon>{{ isEditMode ? 'edit_note' : 'person_add' }}</mat-icon>
+      </div>
+      <div>
+        <h2 class="dialog-title">{{ isEditMode ? 'Edit Customer & Loan' : 'New Customer Entry' }}</h2>
+        <p class="dialog-subtitle">DD Finserve &bull; Daily EMI Microfinance Account</p>
+      </div>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="onCancel()" title="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Dialog Form -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dialog-form">
+    <div class="form-scrollable-content">
+
+      <!-- Section: Borrower Profile -->
+      <div class="form-section">
+        <div class="section-title">
+          <mat-icon class="section-icon">account_circle</mat-icon>
+          <span>1. Customer Personal Details</span>
+        </div>
+
+        <div class="form-grid">
+          <!-- Customer ID -->
+          <mat-form-field appearance="outline">
+            <mat-label>Customer ID</mat-label>
+            <input matInput formControlName="customerId" placeholder="e.g. CUST-1001" />
+            <mat-icon matSuffix>tag</mat-icon>
+            <mat-hint>Auto-generated or custom</mat-hint>
+          </mat-form-field>
+
+          <!-- Customer Name -->
+          <mat-form-field appearance="outline">
+            <mat-label>Full Name *</mat-label>
+            <input matInput formControlName="name" placeholder="Enter customer name" />
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error *ngIf="form.get('name')?.hasError('required')">Name is required</mat-error>
+          </mat-form-field>
+
+          <!-- Mobile Number -->
+          <mat-form-field appearance="outline">
+            <mat-label>Mobile Number *</mat-label>
+            <input matInput formControlName="mobileNumber" maxlength="10" placeholder="10-digit mobile" />
+            <mat-icon matSuffix>phone</mat-icon>
+            <mat-error *ngIf="form.get('mobileNumber')?.hasError('required')">Mobile number is required</mat-error>
+            <mat-error *ngIf="form.get('mobileNumber')?.hasError('pattern')">Enter valid 10-digit mobile number</mat-error>
+          </mat-form-field>
+
+          <!-- Status -->
+          <mat-form-field appearance="outline">
+            <mat-label>Status *</mat-label>
+            <mat-select formControlName="status">
+              <mat-option *ngFor="let s of statuses" [value]="s">
+                <span class="status-option" [ngClass]="'status-' + s.toLowerCase()">{{ s }}</span>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <!-- Address (Full Width) -->
+          <mat-form-field appearance="outline" class="col-span-2">
+            <mat-label>Residential / Business Address *</mat-label>
+            <textarea matInput formControlName="address" rows="2" placeholder="Full shop or home address"></textarea>
+            <mat-icon matSuffix>home</mat-icon>
+            <mat-error *ngIf="form.get('address')?.hasError('required')">Address is required</mat-error>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Section: Loan & Daily EMI Configuration -->
+      <div class="form-section">
+        <div class="section-title">
+          <mat-icon class="section-icon">currency_rupee</mat-icon>
+          <span>2. Loan & Daily EMI Calculation</span>
+        </div>
+
+        <div class="form-grid">
+          <!-- Loan Amount -->
+          <mat-form-field appearance="outline">
+            <mat-label>Loan Amount (₹) *</mat-label>
+            <input matInput type="number" formControlName="loanAmount" placeholder="e.g. 10000" />
+            <span matPrefix class="prefix-currency">₹&nbsp;</span>
+            <mat-error *ngIf="form.get('loanAmount')?.hasError('required')">Loan amount is required</mat-error>
+          </mat-form-field>
+
+          <!-- Interest Rate (%) -->
+          <mat-form-field appearance="outline">
+            <mat-label>Interest Rate (%)</mat-label>
+            <input matInput type="number" formControlName="interestRate" placeholder="e.g. 10" />
+            <span matSuffix>%&nbsp;</span>
+            <mat-hint>Flat rate added to principal</mat-hint>
+          </mat-form-field>
+
+          <!-- Total EMI (Days) -->
+          <mat-form-field appearance="outline">
+            <mat-label>Total EMI (Tenure in Days) *</mat-label>
+            <input matInput type="number" formControlName="totalEMI" placeholder="e.g. 100" />
+            <span matSuffix>&nbsp;Days</span>
+            <mat-hint>Standard: 100 daily installments</mat-hint>
+          </mat-form-field>
+
+          <!-- Daily EMI Amount (Auto Calculated) -->
+          <mat-form-field appearance="outline" class="highlight-field">
+            <mat-label>Daily EMI (₹ / day) *</mat-label>
+            <input matInput type="number" formControlName="dailyEMI" />
+            <span matPrefix class="prefix-currency">₹&nbsp;</span>
+            <mat-icon matSuffix color="primary">calculate</mat-icon>
+            <mat-hint class="calc-hint">Auto-calculated (Editable)</mat-hint>
+          </mat-form-field>
+
+          <!-- Loan Start Date -->
+          <mat-form-field appearance="outline">
+            <mat-label>Loan Start Date *</mat-label>
+            <input matInput [matDatepicker]="startPicker" formControlName="loanStartDate" />
+            <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Loan End Date -->
+          <mat-form-field appearance="outline">
+            <mat-label>Loan End Date *</mat-label>
+            <input matInput [matDatepicker]="endPicker" formControlName="loanEndDate" />
+            <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+            <mat-hint>Auto-calculated from Start Date + Days</mat-hint>
+          </mat-form-field>
+
+          <!-- Collector Name -->
+          <mat-form-field appearance="outline" class="col-span-2">
+            <mat-label>Collector Name *</mat-label>
+            <mat-select formControlName="collectorName">
+              <mat-option *ngFor="let col of collectors" [value]="col">
+                <mat-icon>badge</mat-icon> {{ col }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Field agent assigned for daily collection</mat-hint>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Section: KYC Documents Upload -->
+      <div class="form-section">
+        <div class="section-title">
+          <mat-icon class="section-icon">upload_file</mat-icon>
+          <span>3. KYC Documents for Upload (Aadhaar / PAN / Photo)</span>
+        </div>
+
+        <div class="upload-zone" (click)="fileInput.click()">
+          <input
+            #fileInput
+            type="file"
+            accept="image/*,.pdf"
+            style="display: none"
+            (change)="onFileSelected($event)"
+          />
+
+          <div *ngIf="!kycDoc" class="upload-empty-state">
+            <mat-icon class="upload-cloud-icon">cloud_upload</mat-icon>
+            <div class="upload-text">
+              <strong>Click to upload KYC Document</strong> or drag & drop here
+            </div>
+            <div class="upload-subtext">Supports Aadhaar Card, PAN Card, Borrower Photo, or PDF (Max 15MB)</div>
+          </div>
+
+          <!-- Uploaded File Badge -->
+          <div *ngIf="kycDoc" class="upload-file-card" (click)="$event.stopPropagation()">
+            <div class="file-icon-box">
+              <mat-icon>{{ kycDoc.fileType.includes('pdf') ? 'picture_as_pdf' : 'image' }}</mat-icon>
+            </div>
+            <div class="file-details">
+              <span class="file-name">{{ uploadedFileName || kycDoc.fileName }}</span>
+              <span class="file-size">{{ uploadedFileSize || 'Ready' }} &bull; KYC Verified</span>
+            </div>
+            <button mat-icon-button type="button" class="file-remove-btn" (click)="removeFile($event)" title="Remove document">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Dialog Actions Footer -->
+    <div class="dialog-actions">
+      <button mat-button type="button" class="btn-cancel" (click)="onCancel()">
+        Cancel
+      </button>
+      <button mat-raised-button color="primary" type="submit" class="btn-submit">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ isEditMode ? 'Update Customer' : 'Submit Customer Entry' }}</span>
+      </button>
+    </div>
+  </form>
+</div>

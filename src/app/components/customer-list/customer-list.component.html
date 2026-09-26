@@ -1,0 +1,296 @@
+<div class="customer-page-container">
+
+  <!-- Top Hero & Metric Bar -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <span>DD Finserve</span>
+        <mat-icon class="bc-arrow">chevron_right</mat-icon>
+        <span class="bc-current">Customer Details</span>
+      </div>
+      <h1 class="page-title">Borrower Directory & Daily EMI Portfolio</h1>
+      <p class="page-subtitle">Manage customer onboarding, KYC documents, loan amounts, and daily EMI records.</p>
+    </div>
+
+    <div class="header-right">
+      <button mat-raised-button color="primary" class="primary-add-btn" (click)="openAddCustomerDialog()">
+        <mat-icon>person_add</mat-icon>
+        <span>Add Customer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Metric Summary Cards -->
+  <div class="metrics-grid">
+    <!-- Card 1 -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-blue">
+        <mat-icon>group</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Borrowers</span>
+        <span class="metric-value">{{ totalCustomers }}</span>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-green">
+        <mat-icon>assignment_turned_in</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Active Loans</span>
+        <span class="metric-value text-green">{{ activeLoansCount }}</span>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-purple">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Disbursed</span>
+        <span class="metric-value">₹{{ totalDisbursedAmount | number }}</span>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-red">
+        <mat-icon>error_outline</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Overdue Accounts</span>
+        <span class="metric-value text-red">{{ overdueCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Controls Bar -->
+  <div class="controls-card">
+    <div class="controls-grid">
+      <!-- Search Input -->
+      <div class="search-field-wrapper">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          class="custom-search-input"
+          placeholder="Search by Name, Mobile, Customer ID, Address..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilters()"
+        />
+        <button *ngIf="searchTerm" mat-icon-button class="clear-search-btn" (click)="searchTerm = ''; applyFilters()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-dropdown">
+        <label class="filter-label">Status:</label>
+        <select class="custom-select" [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()">
+          <option value="All">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Completed">Completed</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+
+      <!-- Collector Filter -->
+      <div class="filter-dropdown">
+        <label class="filter-label">Collector:</label>
+        <select class="custom-select" [(ngModel)]="selectedCollector" (ngModelChange)="applyFilters()">
+          <option *ngFor="let col of collectors" [value]="col">{{ col }}</option>
+        </select>
+      </div>
+
+      <!-- Refresh Button -->
+      <button mat-stroked-button class="refresh-btn" (click)="loadCustomers()" title="Refresh Data">
+        <mat-icon>refresh</mat-icon>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Customer Details Table Card -->
+  <div class="table-card">
+    <div class="table-header-info">
+      <span class="table-title">Customer List ({{ filteredCustomers.length }})</span>
+      <span class="table-note">Real-time daily collection tracking</span>
+    </div>
+
+    <div class="table-responsive-wrapper">
+      <table mat-table [dataSource]="filteredCustomers" class="mat-elevation-z1 custom-material-table">
+
+        <!-- Customer ID Column -->
+        <ng-container matColumnDef="customerId">
+          <th mat-header-cell *matHeaderCellDef>Customer ID</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="customer-id-pill">{{ element.customerId }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Customer Name</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="name-cell">
+              <div class="avatar-circle">{{ element.name.charAt(0).toUpperCase() }}</div>
+              <div class="name-details">
+                <span class="customer-name-text">{{ element.name }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Mobile Number Column -->
+        <ng-container matColumnDef="mobileNumber">
+          <th mat-header-cell *matHeaderCellDef>Mobile Number</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="phone-cell">
+              <mat-icon class="cell-icon">phone_android</mat-icon>
+              <a href="tel:{{ element.mobileNumber }}" class="phone-link">{{ element.mobileNumber }}</a>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Address Column -->
+        <ng-container matColumnDef="address">
+          <th mat-header-cell *matHeaderCellDef>Address</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="address-cell" [matTooltip]="element.address">
+              <mat-icon class="cell-icon-dim">place</mat-icon>
+              <span>{{ element.address }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Loan Amount Column -->
+        <ng-container matColumnDef="loanAmount">
+          <th mat-header-cell *matHeaderCellDef>Loan Amount</th>
+          <td mat-cell *matCellDef="let element">
+            <strong class="loan-amount-text">₹{{ element.loanAmount | number }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Daily EMI Column -->
+        <ng-container matColumnDef="dailyEMI">
+          <th mat-header-cell *matHeaderCellDef>Daily EMI</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="daily-emi-badge">₹{{ element.dailyEMI }}/day</span>
+          </td>
+        </ng-container>
+
+        <!-- Total EMI Column -->
+        <ng-container matColumnDef="totalEMI">
+          <th mat-header-cell *matHeaderCellDef>Total EMI</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="total-emi-pill">{{ element.totalEMI }} Days</span>
+          </td>
+        </ng-container>
+
+        <!-- Loan Dates Column (Start & End) -->
+        <ng-container matColumnDef="dates">
+          <th mat-header-cell *matHeaderCellDef>Loan Tenure Dates</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="dates-cell">
+              <div class="date-row">
+                <span class="date-lbl">Start:</span>
+                <span>{{ element.loanStartDate | date:'dd MMM yyyy' }}</span>
+              </div>
+              <div class="date-row" *ngIf="element.loanEndDate">
+                <span class="date-lbl">End:</span>
+                <span class="date-end">{{ element.loanEndDate | date:'dd MMM yyyy' }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Collector Name Column -->
+        <ng-container matColumnDef="collectorName">
+          <th mat-header-cell *matHeaderCellDef>Collector Name</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="collector-badge">
+              <mat-icon class="collector-icon">badge</mat-icon>
+              <span>{{ element.collectorName || 'Unassigned' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- KYC Document Column -->
+        <ng-container matColumnDef="kycDocument">
+          <th mat-header-cell *matHeaderCellDef>KYC Document</th>
+          <td mat-cell *matCellDef="let element">
+            <button
+              *ngIf="element.kycDocument?.fileName"
+              mat-stroked-button
+              class="kyc-view-btn"
+              (click)="viewKyc(element)"
+              [matTooltip]="'View ' + element.kycDocument.fileName"
+            >
+              <mat-icon class="kyc-icon">verified</mat-icon>
+              <span class="kyc-text">Verified</span>
+            </button>
+            <span *ngIf="!element.kycDocument?.fileName" class="kyc-pending-tag">
+              Pending
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let element">
+            <span
+              class="status-badge"
+              [ngClass]="{
+                'status-active': element.status === 'Active',
+                'status-completed': element.status === 'Completed',
+                'status-overdue': element.status === 'Overdue'
+              }"
+            >
+              <mat-icon class="status-icon">
+                {{ element.status === 'Active' ? 'check_circle' : element.status === 'Completed' ? 'task_alt' : 'warning' }}
+              </mat-icon>
+              {{ element.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let element">
+            <div class="actions-group">
+              <button mat-icon-button class="action-btn edit-btn" (click)="editCustomer(element)" matTooltip="Edit details">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button class="action-btn delete-btn" (click)="deleteCustomer(element)" matTooltip="Delete customer">
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Table Row Structure -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="table-data-row"></tr>
+
+        <!-- No Data Row -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state-box">
+              <mat-icon class="empty-icon">search_off</mat-icon>
+              <h3>No matching customers found</h3>
+              <p>Try clearing your search or add a new customer entry.</p>
+              <button mat-raised-button color="primary" (click)="openAddCustomerDialog()">
+                <mat-icon>person_add</mat-icon> Add Customer
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
