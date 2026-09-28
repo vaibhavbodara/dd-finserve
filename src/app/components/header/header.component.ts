@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject, OnInit } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -43,6 +43,7 @@ export class HeaderComponent implements OnInit {
   private authService = inject(AuthService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
 
   backendOnline = false;
   databaseStatus = 'connecting...';
@@ -56,6 +57,8 @@ export class HeaderComponent implements OnInit {
     this.profileService.profile$.subscribe((p) => {
       this.profile = p;
       this.initials = this.profileService.getInitials(p.name);
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     });
   }
 
@@ -63,6 +66,8 @@ export class HeaderComponent implements OnInit {
     this.customerService.checkHealth().subscribe((res) => {
       this.backendOnline = res.online;
       this.databaseStatus = res.database;
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     });
   }
 

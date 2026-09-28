@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -32,6 +32,7 @@ export class DashboardComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   metrics: DashboardMetrics = {
     totalCustomers: 0,
@@ -61,15 +62,21 @@ export class DashboardComponent implements OnInit {
 
   loadMetrics() {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.customerService.getDashboardMetrics().subscribe({
       next: (data) => {
         if (data) {
-          this.metrics = data;
+          this.metrics = { ...data };
         }
         this.isLoading = false;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error loading dashboard metrics:', err);
         this.isLoading = false;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
     });
   }

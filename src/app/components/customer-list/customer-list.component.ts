@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -44,6 +44,7 @@ export class CustomerListComponent implements OnInit {
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   customers: CustomerEntry[] = [];
   filteredCustomers: CustomerEntry[] = [];
@@ -99,14 +100,19 @@ export class CustomerListComponent implements OnInit {
 
   loadCustomers() {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.customerService.getCustomers().subscribe({
       next: (data) => {
-        this.customers = data;
+        this.customers = data || [];
         this.applyFilters();
         this.isLoading = false;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       },
       error: () => {
         this.isLoading = false;
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
         this.snackBar.open('Error loading customers from server', 'Close', { duration: 3000 });
       },
     });
