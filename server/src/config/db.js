@@ -1,4 +1,12 @@
 const mongoose = require('mongoose');
+const dns = require('dns');
+
+// Public DNS fallback for Windows/ISPs that fail to resolve MongoDB SRV records (ECONNREFUSED)
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  // Ignore if not permitted
+}
 
 const connectDB = async () => {
   mongoose.set('bufferCommands', false);
@@ -6,6 +14,7 @@ const connectDB = async () => {
     const isAtlas = (process.env.MONGODB_URI || '').includes('mongodb.net');
     const options = {
       serverSelectionTimeoutMS: 10000,
+      dbName: 'dd_finserve',
       ...(isAtlas ? { tls: true, tlsAllowInvalidCertificates: true } : {}),
     };
 

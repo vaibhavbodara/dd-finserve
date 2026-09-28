@@ -64,39 +64,6 @@ export class AuthService {
         if (res.success && res.token && res.user) {
           this.setSession(res.token, res.user);
         }
-      }),
-      catchError((error) => {
-        // Fallback for offline or network issues with demo users
-        const email = credentials.email.toLowerCase().trim();
-        const pwd = credentials.password;
-
-        if (
-          (email === 'admin@ddfinserve.com' && pwd === 'admin123') ||
-          (email === 'officer@ddfinserve.com' && pwd === 'officer123') ||
-          (email === 'agent@ddfinserve.com' && pwd === 'agent123') ||
-          (pwd.length >= 4 && email.includes('@'))
-        ) {
-          const fallbackUser: UserProfile = {
-            name: email === 'agent@ddfinserve.com' ? 'Agent Rahul' : (email === 'officer@ddfinserve.com' ? 'Priya Sharma' : 'Vaibhav Bodara'),
-            email,
-            phone: '+91 98765 43210',
-            role: email === 'agent@ddfinserve.com' ? 'Field Collection Agent' : (email === 'officer@ddfinserve.com' ? 'Senior Loan Officer' : 'Branch Manager & Administrator'),
-            branch: 'Surat Main Branch',
-            employeeId: email === 'agent@ddfinserve.com' ? 'DDF-FCA-003' : (email === 'officer@ddfinserve.com' ? 'DDF-LO-002' : 'DDF-MGR-001'),
-            avatarColor: email === 'agent@ddfinserve.com' ? '#f59e0b' : (email === 'officer@ddfinserve.com' ? '#10b981' : '#2563eb'),
-            status: 'Online',
-            dailyTarget: 50000,
-          };
-          const dummyToken = 'dd_local_token_' + Date.now();
-          this.setSession(dummyToken, fallbackUser);
-          return of({
-            success: true,
-            message: `Welcome back, ${fallbackUser.name}!`,
-            token: dummyToken,
-            user: fallbackUser,
-          });
-        }
-        throw error;
       })
     );
   }

@@ -1,29 +1,25 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { UserProfile } from '../models/customer.model';
+import { environment } from '../../environments/environment';
 
 const STORAGE_KEY = 'dd_finserve_user_profile';
-
-const DEFAULT_PROFILE: UserProfile = {
-  name: 'Vaibhav Bodara',
-  email: 'vaibhav@ddfinserve.com',
-  phone: '+91 98765 43210',
-  role: 'Branch Manager & Administrator',
-  branch: 'Surat Main Branch',
-  employeeId: 'DDF-MGR-001',
-  avatarColor: '#2563eb',
-  status: 'Online',
-  dailyTarget: 50000,
-};
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserProfileService {
+  private http = inject(HttpClient);
+  private profileUrl = `${environment.apiUrl}/auth/profile`;
+  private meUrl = `${environment.apiUrl}/auth/me`;
+
   private profileSubject = new BehaviorSubject<UserProfile>(this.loadInitialProfile());
   public profile$: Observable<UserProfile> = this.profileSubject.asObservable();
 
-  constructor() {}
+  constructor() {
+    this.refreshFromDatabase();
+  }
 
   get currentProfile(): UserProfile {
     return this.profileSubject.getValue();
@@ -33,25 +29,63 @@ export class UserProfileService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return { ...DEFAULT_PROFILE, ...JSON.parse(stored) };
+        return JSON.parse(stored);
       }
+    } catch {
+      // Ignore parse error
+    }
+    return {
+      name: '',
+      email: '',
+      phone: '',
+      role: '',
+      branch: '',
+      employeeId: '',
+      avatarColor: '#2563eb',
+      status: 'Online',
+      dailyTarget: 50000,
+    };
+  }
+
+  refreshFromDatabase(): void {
+    const token = localStorage.getItem('dd_finserve_auth_token');
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    this.http.get<{ success: boolean; user: UserProfile }>(this.meUrl, { headers }).subscribe({
+      next: (res: { success: boolean; user: UserProfile }) => {
+        if (res && res.success && res.user) {
+          this.setProfile(res.user);
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  setProfile(profile: UserProfile): void {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
     } catch {
       // Ignore storage errors
     }
-    return { ...DEFAULT_PROFILE };
+    this.profileSubject.next(profile);
   }
 
   updateProfile(updates: Partial<UserProfile>): void {
+    const current = this.profileSubject.getValue();
     const updated: UserProfile = {
-      ...this.profileSubject.getValue(),
+      ...current,
       ...updates,
     };
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      // Ignore storage errors
+    this.setProfile(updated);
+
+    if (updated.email) {
+      this.http.put(this.profileUrl, updated).subscribe({
+        error: (err) => console.warn('Could not sync profile to MongoDB:', err.message),
+      });
     }
-    this.profileSubject.next(updated);
   }
 
   setStatus(status: 'Online' | 'Away' | 'On Field'): void {

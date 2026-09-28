@@ -40,10 +40,9 @@ app.get('/api/health', (req, res) => {
   const isDbConnected = mongoose.connection.readyState === 1;
 
   res.json({
-    status: 'ok',
+    status: isDbConnected ? 'ok' : 'degraded',
     service: 'dd-finserve-backend',
-    database: isDbConnected ? 'connected' : 'local-storage',
-    mode: isDbConnected ? 'MongoDB Live' : 'Persistent Storage Fallback (Zero Config)',
+    database: isDbConnected ? 'connected' : 'disconnected',
     timestamp: new Date().toISOString(),
   });
 });

@@ -3,8 +3,15 @@ const dotenv = require('dotenv');
 const Customer = require('./models/Customer');
 const Loan = require('./models/Loan');
 const Collection = require('./models/Collection');
+const path = require('path');
+const dns = require('dns');
 
+dotenv.config({ path: path.join(__dirname, '../.env') });
 dotenv.config();
+
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {}
 
 const sampleCustomers = [
   {
