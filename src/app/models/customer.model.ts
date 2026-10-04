@@ -12,6 +12,13 @@ export interface PaymentRecord {
   scheduledDate: string | Date;
   amount: number;
   status: 'Paid' | 'Pending' | 'Overdue' | 'Upcoming';
+  unpaidPreviousCount?: number;
+  previousUnpaidEmi?: number;
+  previousPenaltyAmount?: number;
+  cumulativePayable?: number;
+  penaltyAmount?: number;
+  totalPayable?: number;
+  isPenaltyPaid?: boolean;
   paidDate?: string | Date;
   paidAmount?: number;
   paymentMode?: string;
@@ -43,6 +50,12 @@ export interface CustomerEntry {
   createdAt?: string | Date;
   notes?: string;
   paymentRecords?: PaymentRecord[];
+  penaltyPerDay?: number;
+  totalPenaltyPaid?: number;
+  overdueCount?: number;
+  totalPenalty?: number;
+  overdueEmiAmount?: number;
+  totalDueToday?: number;
 }
 
 export interface ApiResponse<T> {
@@ -58,6 +71,8 @@ export interface DashboardMetrics {
   todaysReceived: number;
   pendingEmi: number;
   overdueCustomers: number;
+  totalOverduePenalties?: number;
+  penaltyPerDay?: number;
   activeLoansCount: number;
   completedLoansCount: number;
   efficiencyPercentage: number;

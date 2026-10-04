@@ -81,6 +81,18 @@ const loanSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    penaltyPerDay: {
+      type: Number,
+      default: 200,
+    },
+    totalPenaltyPaid: {
+      type: Number,
+      default: 0,
+    },
+    paymentRecords: {
+      type: Array,
+      default: [],
+    },
   },
   {
     timestamps: true,

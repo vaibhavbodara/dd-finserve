@@ -3,6 +3,99 @@ const Customer = require('../models/Customer');
 const Loan = require('../models/Loan');
 const Collection = require('../models/Collection');
 
+// Helper to compute overdue installments, ₹200 daily penalty, and total payable today
+function computeLoanOverdueAndPenalty(loan) {
+  if (!loan) {
+    return {
+      overdueCount: 0,
+      penaltyPerDay: 200,
+      totalPenalty: 0,
+      overdueEmiAmount: 0,
+      totalDueToday: 0,
+      totalPenaltyPaid: 0,
+      isOverdue: false,
+    };
+  }
+
+  const penaltyPerDay = loan.penaltyPerDay !== undefined ? loan.penaltyPerDay : 200;
+  const totalPenaltyPaid = loan.totalPenaltyPaid || 0;
+  const totalEMI = loan.totalEMI || loan.totalInstallments || 0;
+  const paidCount = loan.paidEMI || loan.paidInstallments || 0;
+  const emi = loan.dailyEMI || loan.emiAmount || 0;
+  const emiType = loan.emiType || 'Daily';
+  const startDate = loan.loanStartDate || loan.startDate;
+
+  if (!startDate || totalEMI <= 0 || paidCount >= totalEMI) {
+    return {
+      overdueCount: 0,
+      penaltyPerDay,
+      totalPenalty: 0,
+      overdueEmiAmount: 0,
+      totalDueToday: 0,
+      totalPenaltyPaid,
+      isOverdue: false,
+    };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  let overdueCount = 0;
+  let hasTodayDue = false;
+
+  if (Array.isArray(loan.paymentRecords) && loan.paymentRecords.length > 0) {
+    for (const rec of loan.paymentRecords) {
+      if (rec.status === 'Paid') continue;
+      const recDate = new Date(rec.scheduledDate);
+      recDate.setHours(0, 0, 0, 0);
+      if (recDate.getTime() < today.getTime() || rec.status === 'Overdue') {
+        overdueCount++;
+      } else if (recDate.getTime() === today.getTime() || rec.status === 'Pending') {
+        hasTodayDue = true;
+      }
+    }
+  } else {
+    for (let i = 1; i <= totalEMI; i++) {
+      const dueDate = new Date(start);
+      if (emiType === 'Weekly') {
+        dueDate.setDate(dueDate.getDate() + i * 7);
+      } else if (emiType === 'Monthly') {
+        dueDate.setMonth(dueDate.getMonth() + i);
+      } else {
+        dueDate.setDate(dueDate.getDate() + i);
+      }
+      dueDate.setHours(0, 0, 0, 0);
+
+      const isPaid = i <= paidCount;
+      if (!isPaid) {
+        if (dueDate.getTime() < today.getTime()) {
+          overdueCount++;
+        } else if (dueDate.getTime() === today.getTime()) {
+          hasTodayDue = true;
+        }
+      }
+    }
+  }
+
+  const overdueEmiAmount = overdueCount * emi;
+  const totalPenalty = overdueCount * penaltyPerDay;
+  const todayEmi = (hasTodayDue || (overdueCount > 0 && paidCount + overdueCount < totalEMI)) ? emi : 0;
+  const totalDueToday = overdueEmiAmount + totalPenalty + todayEmi;
+
+  return {
+    overdueCount,
+    penaltyPerDay,
+    totalPenalty,
+    overdueEmiAmount,
+    totalDueToday,
+    totalPenaltyPaid,
+    isOverdue: overdueCount > 0,
+  };
+}
+
 // @desc    Get all customers with integrated loan details directly from MongoDB
 // @route   GET /api/customers
 exports.getCustomers = async (req, res) => {
@@ -10,7 +103,7 @@ exports.getCustomers = async (req, res) => {
     const { search, status, collectorName, emiType } = req.query;
 
     const query = {};
-    if (status && status !== 'All') {
+    if (status && status !== 'All' && status !== 'Overdue') {
       query.status = status;
     }
     if (collectorName && collectorName !== 'All') {
@@ -32,6 +125,11 @@ exports.getCustomers = async (req, res) => {
     const customersWithLoans = await Promise.all(
       customers.map(async (c) => {
         const loan = await Loan.findOne({ customer: c._id }).sort({ createdAt: -1 });
+        const penaltyInfo = computeLoanOverdueAndPenalty(loan);
+        const resolvedStatus = c.status === 'Completed'
+          ? 'Completed'
+          : (penaltyInfo.isOverdue ? 'Overdue' : c.status);
+
         return {
           _id: c._id,
           customerId: c.customerId,
@@ -40,7 +138,7 @@ exports.getCustomers = async (req, res) => {
           address: c.address,
           collectorName: c.collectorName,
           kycDocument: c.kycDocument,
-          status: c.status,
+          status: resolvedStatus,
           createdAt: c.createdAt,
           routeArea: c.routeArea,
           notes: c.notes,
@@ -61,11 +159,20 @@ exports.getCustomers = async (req, res) => {
           loanStartDate: loan ? (loan.loanStartDate || loan.startDate) : null,
           loanEndDate: loan ? loan.loanEndDate : null,
           paymentRecords: loan ? (loan.paymentRecords || []) : [],
+          penaltyPerDay: penaltyInfo.penaltyPerDay,
+          totalPenaltyPaid: penaltyInfo.totalPenaltyPaid,
+          overdueCount: penaltyInfo.overdueCount,
+          totalPenalty: penaltyInfo.totalPenalty,
+          overdueEmiAmount: penaltyInfo.overdueEmiAmount,
+          totalDueToday: penaltyInfo.totalDueToday,
         };
       })
     );
 
     let filtered = customersWithLoans;
+    if (status === 'Overdue') {
+      filtered = filtered.filter((c) => c.status === 'Overdue' || c.overdueCount > 0);
+    }
     if (emiType && emiType !== 'All') {
       filtered = filtered.filter((c) => (c.emiType || 'Daily') === emiType);
     }
@@ -90,12 +197,23 @@ exports.getCustomerById = async (req, res) => {
     }
 
     const loan = await Loan.findOne({ customer: customer._id }).sort({ createdAt: -1 });
+    const penaltyInfo = computeLoanOverdueAndPenalty(loan);
+    const resolvedStatus = customer.status === 'Completed'
+      ? 'Completed'
+      : (penaltyInfo.isOverdue ? 'Overdue' : customer.status);
 
     res.json({
       success: true,
       data: {
         ...customer.toObject(),
+        status: resolvedStatus,
         loan,
+        penaltyPerDay: penaltyInfo.penaltyPerDay,
+        totalPenaltyPaid: penaltyInfo.totalPenaltyPaid,
+        overdueCount: penaltyInfo.overdueCount,
+        totalPenalty: penaltyInfo.totalPenalty,
+        overdueEmiAmount: penaltyInfo.overdueEmiAmount,
+        totalDueToday: penaltyInfo.totalDueToday,
       },
     });
   } catch (error) {
@@ -199,6 +317,9 @@ exports.createCustomer = async (req, res) => {
         collectorName: collectorName || 'Agent Rahul',
         status: status || 'Active',
         notes,
+        penaltyPerDay: Number(req.body.penaltyPerDay) || 200,
+        totalPenaltyPaid: 0,
+        paymentRecords: [],
       });
     }
 
@@ -311,14 +432,22 @@ exports.updateCustomer = async (req, res) => {
       if (req.body.totalPaid !== undefined) loan.totalPaid = Number(req.body.totalPaid);
       if (req.body.remainingBalance !== undefined) loan.remainingBalance = Number(req.body.remainingBalance);
       if (req.body.paymentRecords !== undefined) loan.paymentRecords = req.body.paymentRecords;
+      if (req.body.penaltyPerDay !== undefined) loan.penaltyPerDay = Number(req.body.penaltyPerDay);
+      if (req.body.totalPenaltyPaid !== undefined) loan.totalPenaltyPaid = Number(req.body.totalPenaltyPaid);
       await loan.save();
     }
+
+    const penaltyInfo = computeLoanOverdueAndPenalty(loan);
+    const resolvedStatus = customer.status === 'Completed'
+      ? 'Completed'
+      : (penaltyInfo.isOverdue ? 'Overdue' : customer.status);
 
     res.json({
       success: true,
       message: 'Customer updated in database successfully',
       data: {
         ...customer.toObject(),
+        status: resolvedStatus,
         loanId: loan ? loan._id : null,
         loanAmount: loan ? loan.loanAmount : 0,
         emiType: loan ? loan.emiType : emiType || 'Daily',
@@ -331,6 +460,13 @@ exports.updateCustomer = async (req, res) => {
         totalPaid: loan ? loan.totalPaid : 0,
         loanStartDate: loan ? loan.loanStartDate : null,
         loanEndDate: loan ? loan.loanEndDate : null,
+        paymentRecords: loan ? (loan.paymentRecords || []) : [],
+        penaltyPerDay: penaltyInfo.penaltyPerDay,
+        totalPenaltyPaid: penaltyInfo.totalPenaltyPaid,
+        overdueCount: penaltyInfo.overdueCount,
+        totalPenalty: penaltyInfo.totalPenalty,
+        overdueEmiAmount: penaltyInfo.overdueEmiAmount,
+        totalDueToday: penaltyInfo.totalDueToday,
         loan,
       },
     });

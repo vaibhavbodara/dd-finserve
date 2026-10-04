@@ -24,6 +24,10 @@ const collectionSchema = new mongoose.Schema(
       required: [true, 'Collection amount is required'],
       min: [1, 'Amount must be at least 1'],
     },
+    penaltyAmount: {
+      type: Number,
+      default: 0,
+    },
     paymentDate: {
       type: Date,
       default: Date.now,

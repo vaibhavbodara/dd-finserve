@@ -58,10 +58,6 @@ export class CustomerDetailDialogComponent implements OnInit {
     const startDate = new Date(this.customer.loanStartDate || this.customer.createdAt || new Date());
     const paidCount = Number(this.customer.paidEMI) || 0;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // If customer already has saved paymentRecords, use them as base
     const existingRecordsMap = new Map<number, PaymentRecord>();
     if (this.customer.paymentRecords && this.customer.paymentRecords.length > 0) {
       this.customer.paymentRecords.forEach((r) => existingRecordsMap.set(r.installmentNo, r));
@@ -79,33 +75,20 @@ export class CustomerDetailDialogComponent implements OnInit {
         dueDate.setDate(dueDate.getDate() + i);
       }
 
-      const dueDateMidnight = new Date(dueDate);
-      dueDateMidnight.setHours(0, 0, 0, 0);
-
       const existing = existingRecordsMap.get(i);
 
       if (existing) {
-        list.push({ ...existing, scheduledDate: dueDate });
+        list.push({
+          ...existing,
+          scheduledDate: dueDate,
+        });
       } else {
-        // Compute default status based on paidCount and calendar date
         const isPaid = i <= paidCount;
-        let status: 'Paid' | 'Pending' | 'Overdue' | 'Upcoming' = 'Upcoming';
-
-        if (isPaid) {
-          status = 'Paid';
-        } else if (dueDateMidnight.getTime() < today.getTime()) {
-          status = 'Overdue';
-        } else if (dueDateMidnight.getTime() === today.getTime()) {
-          status = 'Pending';
-        } else {
-          status = 'Upcoming';
-        }
-
         list.push({
           installmentNo: i,
           scheduledDate: dueDate,
           amount: emi,
-          status,
+          status: isPaid ? 'Paid' : 'Upcoming',
           paidDate: isPaid ? dueDate : undefined,
           paidAmount: isPaid ? emi : 0,
           paymentMode: isPaid ? 'Cash' : undefined,
@@ -115,9 +98,70 @@ export class CustomerDetailDialogComponent implements OnInit {
     }
 
     this.schedule = list;
+    this.recalculateRollingPayable();
   }
 
-  // Summary Metrics Getters
+  // Recalculate rolling cumulative payable for each installment
+  // Formula:
+  // If customer misses day 1 (23 Sep), next day (24 Sep) payable = 24 Sep EMI + 200 penalty + 23 Sep EMI = 405.76
+  // If customer misses 24 Sep, next day (25 Sep) payable = 25 Sep EMI + 200 penalty + 24 Sep payable = 708.64
+  recalculateRollingPayable() {
+    const penaltyPerDay = this.penaltyPerDay;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let runningUnpaidCount = 0;
+    let runningUnpaidEmi = 0;
+    let runningPenalty = 0;
+
+    for (let i = 0; i < this.schedule.length; i++) {
+      const rec = this.schedule[i];
+      const dueDate = new Date(rec.scheduledDate);
+      dueDate.setHours(0, 0, 0, 0);
+
+      if (rec.status === 'Paid') {
+        // Streak is reset once an installment is paid
+        runningUnpaidCount = 0;
+        runningUnpaidEmi = 0;
+        runningPenalty = 0;
+        rec.unpaidPreviousCount = 0;
+        rec.previousUnpaidEmi = 0;
+        rec.previousPenaltyAmount = 0;
+        rec.cumulativePayable = rec.paidAmount || rec.amount;
+        rec.totalPayable = rec.cumulativePayable;
+        continue;
+      }
+
+      // Record preceding unpaid counts and penalties carried forward to this date
+      rec.unpaidPreviousCount = runningUnpaidCount;
+      rec.previousUnpaidEmi = Number(runningUnpaidEmi.toFixed(2));
+      rec.previousPenaltyAmount = runningPenalty;
+
+      // Cumulative payable for this date
+      rec.cumulativePayable = Number((rec.amount + runningUnpaidEmi + runningPenalty).toFixed(2));
+      rec.totalPayable = rec.cumulativePayable;
+
+      // Determine date status
+      if (dueDate.getTime() < today.getTime()) {
+        rec.status = 'Overdue';
+        // Missed this day: carries forward to the NEXT day with +₹200 penalty
+        runningUnpaidCount += 1;
+        runningUnpaidEmi += rec.amount;
+        runningPenalty += penaltyPerDay;
+        rec.penaltyAmount = runningPenalty;
+      } else if (dueDate.getTime() === today.getTime()) {
+        rec.status = 'Pending';
+      } else {
+        rec.status = 'Upcoming';
+      }
+    }
+  }
+
+  // Penalty & Overdue Getters
+  get penaltyPerDay(): number {
+    return Number(this.customer.penaltyPerDay) || 200;
+  }
+
   get paidInstallmentsCount(): number {
     return this.schedule.filter((s) => s.status === 'Paid').length;
   }
@@ -130,12 +174,64 @@ export class CustomerDetailDialogComponent implements OnInit {
     return this.schedule.filter((s) => s.status === 'Overdue').length;
   }
 
+  get overdueInstallments(): PaymentRecord[] {
+    return this.schedule.filter((s) => s.status === 'Overdue');
+  }
+
+  get totalOverduePenalty(): number {
+    return this.overdueInstallmentsCount * this.penaltyPerDay;
+  }
+
+  get totalOverdueEmiAmount(): number {
+    return Number(this.overdueInstallments.reduce((acc, curr) => acc + curr.amount, 0).toFixed(2));
+  }
+
+  get totalOverduePayable(): number {
+    return Number((this.totalOverdueEmiAmount + this.totalOverduePenalty).toFixed(2));
+  }
+
+  get todayDueRecord(): PaymentRecord | undefined {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return this.schedule.find((s) => {
+      if (s.status === 'Paid') return false;
+      const d = new Date(s.scheduledDate);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime() === today.getTime();
+    });
+  }
+
+  get todayEmiAmount(): number {
+    if (this.todayDueRecord) return this.todayDueRecord.amount;
+    return Number(this.customer.dailyEMI) || Number(this.customer.emiAmount) || 0;
+  }
+
+  get totalDueTodayWithPenalty(): number {
+    // If today is scheduled, its cumulativePayable already reflects all previous overdue EMIs + penalties + today's EMI
+    if (this.todayDueRecord && this.todayDueRecord.cumulativePayable) {
+      return this.todayDueRecord.cumulativePayable;
+    }
+    if (this.overdueInstallmentsCount > 0) {
+      return Number((this.totalOverduePayable + this.todayEmiAmount).toFixed(2));
+    }
+    return this.todayDueRecord ? this.todayDueRecord.amount : 0;
+  }
+
   get totalAmountCalculated(): number {
     return Number(this.customer.totalAmount) || this.customer.loanAmount || 0;
   }
 
   get totalPaidCalculated(): number {
     return this.schedule.reduce((acc, curr) => acc + (curr.paidAmount || (curr.status === 'Paid' ? curr.amount : 0)), 0);
+  }
+
+  get totalPenaltyPaidCalculated(): number {
+    return this.schedule.reduce((acc, curr) => {
+      if (curr.status === 'Paid' && curr.isPenaltyPaid && curr.penaltyAmount) {
+        return acc + curr.penaltyAmount;
+      }
+      return acc;
+    }, 0);
   }
 
   get remainingBalanceCalculated(): number {
@@ -192,31 +288,65 @@ export class CustomerDetailDialogComponent implements OnInit {
   // Action: Mark an installment as Received
   markAsReceived(record: PaymentRecord, event?: Event) {
     if (event) event.stopPropagation();
-    const emi = Number(this.customer.dailyEMI) || Number(this.customer.emiAmount) || record.amount;
 
-    record.status = 'Paid';
-    record.paidAmount = emi;
-    record.paidDate = new Date();
-    record.paymentMode = 'Cash';
-    record.collectorName = this.customer.collectorName || 'Agent Rahul';
+    const targetNo = record.installmentNo;
+    const now = new Date();
+    const penaltyPerDay = this.penaltyPerDay;
 
-    this.syncCustomerStateAndSave(`Installment #${record.installmentNo} marked as Received (₹${emi})`);
+    // Find all unpaid installments up to and including this one
+    const toPay = this.schedule.filter((s) => s.status !== 'Paid' && s.installmentNo <= targetNo);
+    if (toPay.length === 0) {
+      toPay.push(record);
+    }
+
+    let totalCollectedAmount = 0;
+    toPay.forEach((rec, idx) => {
+      rec.status = 'Paid';
+      rec.paidDate = now;
+      rec.paymentMode = 'Cash';
+      rec.collectorName = this.customer.collectorName || 'Agent Rahul';
+
+      // For any preceding overdue installment in the streak, it was missed, so late fee of ₹200 was incurred
+      if (idx < toPay.length - 1) {
+        rec.isPenaltyPaid = true;
+        rec.penaltyAmount = penaltyPerDay;
+        rec.paidAmount = Number((rec.amount + penaltyPerDay).toFixed(2));
+      } else {
+        // The target installment itself
+        rec.paidAmount = rec.amount;
+        rec.penaltyAmount = 0;
+        rec.isPenaltyPaid = false;
+      }
+      totalCollectedAmount += rec.paidAmount;
+    });
+
+    this.recalculateRollingPayable();
+
+    const msg = toPay.length > 1
+      ? `Collected installments up to #${targetNo} (Cleared ${toPay.length} installments with late penalties). Total: ₹${totalCollectedAmount.toFixed(2)}`
+      : `Installment #${record.installmentNo} marked as Received (₹${record.amount})`;
+
+    this.syncCustomerStateAndSave(msg);
   }
 
   // Action: Undo / Mark installment as Unpaid
   markAsUnpaid(record: PaymentRecord, event?: Event) {
     if (event) event.stopPropagation();
 
+    record.paidAmount = 0;
+    record.paidDate = undefined;
+    record.paymentMode = undefined;
+    record.isPenaltyPaid = false;
+    record.penaltyAmount = 0;
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const due = new Date(record.scheduledDate);
     due.setHours(0, 0, 0, 0);
 
-    record.status = due.getTime() < today.getTime() ? 'Overdue' : 'Pending';
-    record.paidAmount = 0;
-    record.paidDate = undefined;
-    record.paymentMode = undefined;
+    record.status = due.getTime() < today.getTime() ? 'Overdue' : (due.getTime() === today.getTime() ? 'Pending' : 'Upcoming');
 
+    this.recalculateRollingPayable();
     this.syncCustomerStateAndSave(`Installment #${record.installmentNo} reverted to ${record.status}`);
   }
 
@@ -227,6 +357,35 @@ export class CustomerDetailDialogComponent implements OnInit {
       this.markAsReceived(next);
     } else {
       this.snackBar.open('All installments for this customer are already paid!', 'OK', { duration: 3000 });
+    }
+  }
+
+  // Quick Action: Collect Oldest Overdue Installment
+  collectNextOverdue() {
+    const nextOverdue = this.schedule.find((s) => s.status === 'Overdue');
+    if (nextOverdue) {
+      this.markAsReceived(nextOverdue);
+    } else {
+      this.snackBar.open('No overdue installments remaining!', 'OK', { duration: 3000 });
+    }
+  }
+
+  // Quick Action: Clear all Overdue installments + Today's EMI in one single step
+  collectAllOverdueAndToday() {
+    const overdueList = this.schedule.filter((s) => s.status === 'Overdue');
+    const todayRec = this.todayDueRecord;
+    const maxInstallmentNo = todayRec
+      ? todayRec.installmentNo
+      : (overdueList.length > 0 ? overdueList[overdueList.length - 1].installmentNo : 0);
+
+    if (maxInstallmentNo === 0) {
+      this.snackBar.open('No overdue or pending installments to collect today!', 'OK', { duration: 3000 });
+      return;
+    }
+
+    const targetRec = this.schedule.find((s) => s.installmentNo === maxInstallmentNo);
+    if (targetRec) {
+      this.markAsReceived(targetRec);
     }
   }
 
@@ -247,6 +406,10 @@ export class CustomerDetailDialogComponent implements OnInit {
     this.customer.remainingBalance = remaining;
     this.customer.status = newStatus;
     this.customer.paymentRecords = this.schedule;
+    this.customer.overdueCount = this.overdueInstallmentsCount;
+    this.customer.totalPenalty = this.totalOverduePenalty;
+    this.customer.totalPenaltyPaid = this.totalPenaltyPaidCalculated;
+    this.customer.totalDueToday = this.totalDueTodayWithPenalty;
 
     this.applyFilter();
 
@@ -262,6 +425,7 @@ export class CustomerDetailDialogComponent implements OnInit {
       remainingBalance: remaining,
       status: newStatus,
       paymentRecords: this.schedule,
+      totalPenaltyPaid: this.customer.totalPenaltyPaid,
     };
 
     this.customerService.updateCustomer(this.customer._id, updatePayload).subscribe({
@@ -278,11 +442,26 @@ export class CustomerDetailDialogComponent implements OnInit {
 
   // Export Date-wise Schedule to CSV/Excel
   exportToCsv() {
-    const headers = ['Installment No', 'Due Date', 'Expected EMI (INR)', 'Status', 'Paid Amount (INR)', 'Received Date', 'Collector', 'Mode'];
+    const headers = [
+      'Installment No',
+      'Due Date',
+      'Base EMI (INR)',
+      'Previous Overdue EMIs (INR)',
+      'Late Penalty (INR)',
+      'Total Payable for Date (INR)',
+      'Status',
+      'Received Amount (INR)',
+      'Received Date',
+      'Collector',
+      'Mode',
+    ];
     const rows = this.schedule.map((s) => [
       s.installmentNo,
       new Date(s.scheduledDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       s.amount,
+      s.previousUnpaidEmi || 0,
+      s.previousPenaltyAmount || (s.status === 'Overdue' || s.isPenaltyPaid ? (s.penaltyAmount || this.penaltyPerDay) : 0),
+      s.cumulativePayable || s.totalPayable || s.amount,
       s.status,
       s.paidAmount || 0,
       s.paidDate ? new Date(s.paidDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—',

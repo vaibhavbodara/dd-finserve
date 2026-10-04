@@ -110,7 +110,8 @@
       </div>
       <div class="kpi-footer">
         <span class="kpi-badge badge-rose">{{ metrics.overdueCustomers > 0 ? 'Action Required' : 'All Clear' }}</span>
-        <span class="kpi-subtext">Click to view overdue</span>
+        <span class="kpi-subtext" *ngIf="metrics.totalOverduePenalties">Late Fees: ₹{{ metrics.totalOverduePenalties | number }}</span>
+        <span class="kpi-subtext" *ngIf="!metrics.totalOverduePenalties">Click to view overdue</span>
       </div>
     </div>
 

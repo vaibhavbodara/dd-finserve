@@ -92,11 +92,34 @@
         <div class="kpi-content">
           <span class="kpi-label">Total Received</span>
           <strong class="kpi-value text-green">₹{{ totalPaidCalculated | number }}</strong>
-          <span class="kpi-sub">{{ paidInstallmentsCount }} of {{ schedule.length }} EMIs Paid</span>
+          <span class="kpi-sub">
+            {{ paidInstallmentsCount }} of {{ schedule.length }} Paid
+            @if (totalPenaltyPaidCalculated > 0) {
+              &bull; <span class="penalty-paid-tag">+₹{{ totalPenaltyPaidCalculated }} Penalty</span>
+            }
+          </span>
         </div>
       </div>
 
-      <!-- 4. Remaining Balance -->
+      <!-- 4. Overdue Late Penalty Fee -->
+      <div class="kpi-card highlight-penalty" [class.has-penalty]="overdueInstallmentsCount > 0">
+        <div class="kpi-icon-box bg-red">
+          <mat-icon>warning_amber</mat-icon>
+        </div>
+        <div class="kpi-content">
+          <span class="kpi-label">Late Penalty Fee</span>
+          <strong class="kpi-value text-red">₹{{ totalOverduePenalty | number }}</strong>
+          <span class="kpi-sub">
+            @if (overdueInstallmentsCount > 0) {
+              <span class="text-danger font-bold">{{ overdueInstallmentsCount }}d × ₹{{ penaltyPerDay }}/day</span>
+            } @else {
+              <span class="text-success">No Overdue Fee</span>
+            }
+          </span>
+        </div>
+      </div>
+
+      <!-- 5. Remaining Balance -->
       <div class="kpi-card highlight-balance">
         <div class="kpi-icon-box bg-amber">
           <mat-icon>pending_actions</mat-icon>
@@ -106,7 +129,7 @@
           <strong class="kpi-value text-amber">₹{{ remainingBalanceCalculated | number }}</strong>
           <span class="kpi-sub">
             @if (overdueInstallmentsCount > 0) {
-              <span class="text-danger font-bold">{{ overdueInstallmentsCount }} Overdue</span>
+              <span class="text-danger font-bold">Today Due: ₹{{ totalDueTodayWithPenalty | number }}</span>
             } @else {
               <span>{{ pendingInstallmentsCount }} Pending</span>
             }
@@ -129,6 +152,11 @@
         <div class="spec-item">
           <span class="spec-label">EMI Amount:</span>
           <strong class="spec-value text-primary">₹{{ (customer.dailyEMI || customer.emiAmount || 0) | number }} / {{ customer.emiType === 'Weekly' ? 'week' : (customer.emiType === 'Monthly' ? 'month' : 'day') }}</strong>
+        </div>
+
+        <div class="spec-item">
+          <span class="spec-label">Late Penalty:</span>
+          <strong class="spec-value text-danger">₹{{ penaltyPerDay }} / overdue day</strong>
         </div>
 
         <div class="spec-item">
@@ -159,6 +187,71 @@
       </div>
     </div>
 
+    <!-- Overdue Penalty Alert Banner (When customer has overdue payments) -->
+    @if (overdueInstallmentsCount > 0) {
+      <div class="overdue-penalty-banner">
+        <div class="banner-left">
+          <div class="banner-icon-circle">
+            <mat-icon>report_problem</mat-icon>
+          </div>
+          <div class="banner-info">
+            <div class="banner-title-row">
+              <h4 class="banner-title">विलंब शुल्क लागू (Late Overdue Penalty Active)</h4>
+              <span class="banner-badge">{{ overdueInstallmentsCount }} Days Overdue</span>
+            </div>
+            <p class="banner-desc">
+              Customer missed payment for <strong>{{ overdueInstallmentsCount }} installment(s)</strong>.
+              Daily penalty of <strong>₹{{ penaltyPerDay }}</strong> applies per missed day.
+            </p>
+            <div class="banner-calc-summary">
+              <div class="calc-part">
+                <span class="calc-lbl">Overdue EMIs:</span>
+                <strong class="calc-val">₹{{ totalOverdueEmiAmount | number }}</strong>
+              </div>
+              <span class="calc-op">+</span>
+              <div class="calc-part text-danger">
+                <span class="calc-lbl">Late Penalties ({{ overdueInstallmentsCount }} × ₹{{ penaltyPerDay }}):</span>
+                <strong class="calc-val">+₹{{ totalOverduePenalty | number }}</strong>
+              </div>
+              <span class="calc-op">+</span>
+              <div class="calc-part">
+                <span class="calc-lbl">Today's EMI:</span>
+                <strong class="calc-val">₹{{ todayEmiAmount | number }}</strong>
+              </div>
+              <span class="calc-op">=</span>
+              <div class="calc-part total-due-highlight">
+                <span class="calc-lbl">Total Payable Today (आज कुल देय राशि):</span>
+                <strong class="calc-val-lg">₹{{ totalDueTodayWithPenalty | number }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="banner-actions">
+          <button
+            mat-raised-button
+            class="btn-clear-all-overdue"
+            (click)="collectAllOverdueAndToday()"
+            [disabled]="isSaving"
+            matTooltip="Clear all Overdue EMIs + Penalties + Today EMI together"
+          >
+            <mat-icon>task_alt</mat-icon>
+            <span>Clear Overdue + Today (₹{{ totalDueTodayWithPenalty | number }})</span>
+          </button>
+          <button
+            mat-stroked-button
+            class="btn-collect-next-overdue"
+            (click)="collectNextOverdue()"
+            [disabled]="isSaving"
+            matTooltip="Collect the oldest overdue installment with penalty"
+          >
+            <mat-icon>payments</mat-icon>
+            <span>Collect 1 Overdue (₹{{ ((schedule[0]?.amount || 0) + penaltyPerDay) | number }})</span>
+          </button>
+        </div>
+      </div>
+    }
+
     <!-- Date-wise Payment Schedule Section -->
     <div class="schedule-card">
 
@@ -169,21 +262,33 @@
             <span>Date-wise Payment Ledger (तारीख अनुसार भुगतान रिकॉर्ड)</span>
           </h3>
           <p class="section-desc">
-            Installment-by-installment record showing whether payment was received for each date.
+            Installment-by-installment record with ₹{{ penaltyPerDay }}/day overdue penalty calculation.
           </p>
         </div>
 
         <div class="toolbar-right">
-          <button
-            mat-raised-button
-            color="primary"
-            class="btn-collect-next"
-            (click)="collectNextDue()"
-            [disabled]="isSaving || remainingBalanceCalculated <= 0"
-          >
-            <mat-icon>add_task</mat-icon>
-            <span>Collect Next EMI (₹{{ (customer.dailyEMI || customer.emiAmount || 0) | number }})</span>
-          </button>
+          @if (overdueInstallmentsCount > 0) {
+            <button
+              mat-raised-button
+              class="btn-clear-all-top"
+              (click)="collectAllOverdueAndToday()"
+              [disabled]="isSaving || remainingBalanceCalculated <= 0"
+            >
+              <mat-icon>done_all</mat-icon>
+              <span>Clear Overdue + Today (₹{{ totalDueTodayWithPenalty | number }})</span>
+            </button>
+          } @else {
+            <button
+              mat-raised-button
+              color="primary"
+              class="btn-collect-next"
+              (click)="collectNextDue()"
+              [disabled]="isSaving || remainingBalanceCalculated <= 0"
+            >
+              <mat-icon>add_task</mat-icon>
+              <span>Collect Next EMI (₹{{ (customer.dailyEMI || customer.emiAmount || 0) | number }})</span>
+            </button>
+          }
         </div>
       </div>
 
@@ -225,6 +330,9 @@
           >
             <span class="dot-indicator bg-red"></span>
             Overdue ({{ overdueInstallmentsCount }})
+            @if (totalOverduePenalty > 0) {
+              <span class="tab-penalty-badge">+₹{{ totalOverduePenalty }}</span>
+            }
           </button>
         </div>
 
@@ -253,7 +361,7 @@
             <tr>
               <th class="th-num">#</th>
               <th class="th-date">Date (तारीख)</th>
-              <th class="th-emi">Amount (देय राशि)</th>
+              <th class="th-emi">Payable Amount & Penalty (देय राशि / विलंब शुल्क)</th>
               <th class="th-status">Status (स्थिति)</th>
               <th class="th-paid">Received Amount (प्राप्त राशि)</th>
               <th class="th-paytype">Payment Type (भुगतान प्रकार)</th>
@@ -282,9 +390,46 @@
                   </div>
                 </td>
 
-                <!-- Amount -->
+                <!-- Payable Amount & Penalty Breakdown -->
                 <td class="td-emi">
-                  <strong class="emi-amount-text">₹{{ row.amount | number }}</strong>
+                  <div class="emi-breakdown-wrapper">
+                    <div class="emi-line">
+                      <span class="base-emi-label">Base EMI:</span>
+                      <strong class="emi-amount-text">₹{{ row.amount | number:'1.2-2' }}</strong>
+                    </div>
+
+                    @if (row.unpaidPreviousCount && row.unpaidPreviousCount > 0) {
+                      <!-- Cumulative rolling breakdown -->
+                      <div class="rolling-breakdown-box">
+                        <span class="rolling-chip emi-chip" [matTooltip]="row.unpaidPreviousCount + ' missed installments carried forward'">
+                          +{{ row.unpaidPreviousCount }} Overdue: ₹{{ row.previousUnpaidEmi | number:'1.2-2' }}
+                        </span>
+                        <span class="rolling-chip penalty-chip" [matTooltip]="row.unpaidPreviousCount + ' days × ₹' + penaltyPerDay + ' late penalty'">
+                          <mat-icon class="rolling-icon">gavel</mat-icon>
+                          +Penalty: ₹{{ row.previousPenaltyAmount | number:'1.2-2' }}
+                        </span>
+                      </div>
+                      <div class="total-payable-line">
+                        <span class="total-payable-lbl">Payable:</span>
+                        <strong class="total-payable-val text-red">₹{{ (row.cumulativePayable || row.amount) | number:'1.2-2' }}</strong>
+                      </div>
+                    } @else if (row.status === 'Overdue') {
+                      <!-- First missed day in streak (Day 1) -->
+                      <div class="day1-overdue-box">
+                        <span class="day1-badge">Missed Day 1</span>
+                        <span class="day1-note">+₹{{ penaltyPerDay }} fee carries to next day</span>
+                      </div>
+                      <div class="total-payable-line">
+                        <span class="total-payable-lbl">Payable:</span>
+                        <strong class="total-payable-val">₹{{ row.amount | number:'1.2-2' }}</strong>
+                      </div>
+                    } @else {
+                      <div class="total-payable-line">
+                        <span class="total-payable-lbl">Payable:</span>
+                        <strong class="total-payable-val">₹{{ row.amount | number:'1.2-2' }}</strong>
+                      </div>
+                    }
+                  </div>
                 </td>
 
                 <!-- Status (Received / Pending / Overdue) -->
@@ -315,7 +460,12 @@
                 <!-- Received Amount -->
                 <td class="td-paid">
                   @if (row.status === 'Paid') {
-                    <strong class="paid-amount-text text-green">₹{{ (row.paidAmount || row.amount) | number }}</strong>
+                    <div class="paid-amount-wrapper">
+                      <strong class="paid-amount-text text-green">₹{{ (row.paidAmount || row.amount) | number:'1.2-2' }}</strong>
+                      @if (row.isPenaltyPaid && row.penaltyAmount) {
+                        <span class="penalty-paid-indicator">(₹{{ row.amount | number:'1.2-2' }} + ₹{{ row.penaltyAmount }} penalty)</span>
+                      }
+                    </div>
                   } @else {
                     <span class="text-pending-zero">₹0</span>
                   }
@@ -349,12 +499,13 @@
                     <button
                       type="button"
                       class="btn-mark-paid"
+                      [class.btn-mark-overdue]="row.status === 'Overdue' || (row.unpaidPreviousCount && row.unpaidPreviousCount > 0)"
                       (click)="markAsReceived(row, $event)"
                       [disabled]="isSaving"
-                      matTooltip="Click to mark payment as Received for this date"
+                      [matTooltip]="(row.unpaidPreviousCount && row.unpaidPreviousCount > 0) ? 'Collect ₹' + ((row.cumulativePayable || row.amount) | number:'1.2-2') + ' to clear installments up to #' + row.installmentNo : 'Mark payment as received'"
                     >
-                      <mat-icon>check</mat-icon>
-                      <span>Mark Received</span>
+                      <mat-icon>{{ (row.unpaidPreviousCount && row.unpaidPreviousCount > 0) || row.status === 'Overdue' ? 'payments' : 'check' }}</mat-icon>
+                      <span>Collect ₹{{ (row.cumulativePayable || row.amount) | number:'1.2-2' }}</span>
                     </button>
                   } @else {
                     <button

@@ -39,6 +39,56 @@ exports.getDashboardMetrics = async (req, res) => {
     const weeklyCount = loans.filter((l) => l.emiType === 'Weekly').length;
     const monthlyCount = loans.filter((l) => l.emiType === 'Monthly').length;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let totalOverduePenalties = 0;
+    let computedOverdueCustomerCount = 0;
+
+    for (const loan of loans) {
+      if (loan.status === 'Completed' || (loan.remainingBalance !== undefined && loan.remainingBalance <= 0)) continue;
+      const totalEMI = loan.totalEMI || 100;
+      const paidEMI = loan.paidEMI || 0;
+      const startDate = loan.loanStartDate ? new Date(loan.loanStartDate) : null;
+      if (!startDate) continue;
+      startDate.setHours(0, 0, 0, 0);
+
+      let loanOverdueCount = 0;
+      if (Array.isArray(loan.paymentRecords) && loan.paymentRecords.length > 0) {
+        for (const rec of loan.paymentRecords) {
+          if (rec.status === 'Paid') continue;
+          const rDate = new Date(rec.scheduledDate);
+          rDate.setHours(0, 0, 0, 0);
+          if (rDate < today || rec.status === 'Overdue') {
+            loanOverdueCount++;
+          }
+        }
+      } else {
+        for (let i = 1; i <= totalEMI; i++) {
+          const dueDate = new Date(startDate);
+          if (loan.emiType === 'Weekly') {
+            dueDate.setDate(dueDate.getDate() + i * 7);
+          } else if (loan.emiType === 'Monthly') {
+            dueDate.setMonth(dueDate.getMonth() + i);
+          } else {
+            dueDate.setDate(dueDate.getDate() + i);
+          }
+          dueDate.setHours(0, 0, 0, 0);
+
+          if (i > paidEMI && dueDate < today) {
+            loanOverdueCount++;
+          }
+        }
+      }
+
+      if (loanOverdueCount > 0) {
+        computedOverdueCustomerCount++;
+        totalOverduePenalties += loanOverdueCount * (loan.penaltyPerDay || 200);
+      }
+    }
+
+    const finalOverdueCount = Math.max(overdueCustomers.length, computedOverdueCustomerCount);
+
     res.json({
       success: true,
       data: {
@@ -46,7 +96,9 @@ exports.getDashboardMetrics = async (req, res) => {
         todaysTotalEmi,
         todaysReceived,
         pendingEmi,
-        overdueCustomers: overdueCustomers.length,
+        overdueCustomers: finalOverdueCount,
+        totalOverduePenalties,
+        penaltyPerDay: 200,
         activeLoansCount: activeCustomers.length,
         completedLoansCount: completedCustomers.length,
         efficiencyPercentage: todaysTotalEmi > 0 ? Math.round((todaysReceived / todaysTotalEmi) * 100) : 0,

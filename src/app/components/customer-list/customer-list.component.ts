@@ -86,7 +86,10 @@ export class CustomerListComponent implements OnInit {
     return this.customers.reduce((sum, c) => sum + (c.loanAmount || 0), 0);
   }
   get overdueCount(): number {
-    return this.customers.filter((c) => c.status === 'Overdue').length;
+    return this.customers.filter((c) => c.status === 'Overdue' || (c.overdueCount && c.overdueCount > 0)).length;
+  }
+  get totalOverduePenalties(): number {
+    return this.customers.reduce((sum, c) => sum + (c.totalPenalty || ((c.overdueCount || 0) * (c.penaltyPerDay || 200))), 0);
   }
 
   ngOnInit() {

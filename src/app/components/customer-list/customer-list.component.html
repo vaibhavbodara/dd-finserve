@@ -63,6 +63,9 @@
       <div class="metric-info">
         <span class="metric-label">Overdue Accounts</span>
         <span class="metric-value text-red">{{ overdueCount }}</span>
+        <span class="metric-sub-fee" *ngIf="totalOverduePenalties > 0">
+          +₹{{ totalOverduePenalties | number }} Penalty
+        </span>
       </div>
     </div>
   </div>
@@ -266,21 +269,32 @@
 
         <!-- Status Column -->
         <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <th mat-header-cell *matHeaderCellDef>Status & Penalty</th>
           <td mat-cell *matCellDef="let element">
-            <span
-              class="status-badge"
-              [ngClass]="{
-                'status-active': element.status === 'Active',
-                'status-completed': element.status === 'Completed',
-                'status-overdue': element.status === 'Overdue'
-              }"
-            >
-              <mat-icon class="status-icon">
-                {{ element.status === 'Active' ? 'check_circle' : element.status === 'Completed' ? 'task_alt' : 'warning' }}
-              </mat-icon>
-              {{ element.status }}
-            </span>
+            <div class="status-cell-wrapper">
+              <span
+                class="status-badge"
+                [ngClass]="{
+                  'status-active': element.status === 'Active',
+                  'status-completed': element.status === 'Completed',
+                  'status-overdue': element.status === 'Overdue' || element.overdueCount > 0
+                }"
+              >
+                <mat-icon class="status-icon">
+                  {{ element.status === 'Completed' ? 'task_alt' : ((element.status === 'Overdue' || element.overdueCount > 0) ? 'warning' : 'check_circle') }}
+                </mat-icon>
+                {{ (element.status === 'Overdue' || element.overdueCount > 0) ? 'Overdue' : element.status }}
+              </span>
+
+              @if (element.overdueCount > 0 || element.totalPenalty > 0) {
+                <span class="penalty-tag-table" [matTooltip]="(element.overdueCount || 0) + ' overdue days × ₹' + (element.penaltyPerDay || 200) + '/day late penalty'">
+                  +₹{{ element.totalPenalty || ((element.overdueCount || 0) * (element.penaltyPerDay || 200)) }} Penalty
+                </span>
+                <span class="due-today-tag" *ngIf="element.totalDueToday">
+                  Due: ₹{{ element.totalDueToday | number }}
+                </span>
+              }
+            </div>
           </td>
         </ng-container>
 
