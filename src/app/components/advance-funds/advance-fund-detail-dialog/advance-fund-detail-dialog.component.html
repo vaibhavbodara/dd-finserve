@@ -1,0 +1,274 @@
+<div class="detail-dialog-container print-area">
+
+  <!-- Header Banner -->
+  <div class="dialog-header no-print">
+    <div class="header-title-box">
+      <div class="header-avatar">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div>
+        <div class="header-top-row">
+          <h2 class="dialog-title">{{ fund.investorName }}</h2>
+          <span class="fund-code-pill">{{ fund.fundCode }}</span>
+          <span
+            class="status-pill"
+            [class.status-active]="fund.status === 'Active'"
+            [class.status-matured]="fund.status === 'Matured'"
+            [class.status-closed]="fund.status === 'Closed'"
+          >
+            {{ fund.status }}
+          </span>
+        </div>
+        <p class="dialog-subtitle">Market Advance Loan & Payout Ledger Statement</p>
+      </div>
+    </div>
+    <div class="header-action-btns">
+      <button mat-icon-button class="print-btn" (click)="printLedger()" title="Print Statement">
+        <mat-icon>print</mat-icon>
+      </button>
+      <button mat-icon-button class="close-btn" (click)="close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="dialog-content-body">
+
+    <!-- KPI Summary Row -->
+    <div class="kpi-summary-cards">
+      <div class="kpi-mini-card">
+        <span class="kpi-mini-label">Principal Borrowed</span>
+        <span class="kpi-mini-val">₹{{ fund.amountInvested | number }}</span>
+        <span class="kpi-mini-sub">{{ fund.interestRate }}% {{ fund.interestRateBasis }}</span>
+      </div>
+
+      <div class="kpi-mini-card">
+        <span class="kpi-mini-label">Monthly Interest</span>
+        <span class="kpi-mini-val text-rose">₹{{ (fund.monthlyInterestAmount || 0) | number }}</span>
+        <span class="kpi-mini-sub">Cycle: {{ fund.payoutFrequency }}</span>
+      </div>
+
+      <div class="kpi-mini-card">
+        <span class="kpi-mini-label">Interest Returned</span>
+        <span class="kpi-mini-val text-green">₹{{ (fund.totalInterestPaid || 0) | number }}</span>
+        <span class="kpi-mini-sub">Paid to Investor</span>
+      </div>
+
+      <div class="kpi-mini-card">
+        <span class="kpi-mini-label">Principal Returned</span>
+        <span class="kpi-mini-val text-blue">₹{{ (fund.totalPrincipalRepaid || 0) | number }}</span>
+        <span class="kpi-mini-sub">Capital Repaid</span>
+      </div>
+
+      <div class="kpi-mini-card">
+        <span class="kpi-mini-label">Remaining Principal</span>
+        <span class="kpi-mini-val text-amber">₹{{ (fund.remainingPrincipal || 0) | number }}</span>
+        <span class="kpi-mini-sub">Outstanding</span>
+      </div>
+    </div>
+
+    <!-- Investor Profile & Terms 2-Column Grid -->
+    <div class="info-grid">
+      <!-- Column 1: Investor Contact & KYC -->
+      <div class="info-card">
+        <div class="card-section-title">
+          <mat-icon>person</mat-icon>
+          <span>Investor Information & KYC</span>
+        </div>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-label">Full Name:</span>
+            <span class="info-value font-bold">{{ fund.investorName }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Mobile Phone:</span>
+            <span class="info-value">{{ fund.mobileNumber }}</span>
+          </div>
+          <div class="info-row" *ngIf="fund.email">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ fund.email }}</span>
+          </div>
+          <div class="info-row" *ngIf="fund.panNumber">
+            <span class="info-label">PAN Number:</span>
+            <span class="info-value pan-badge">{{ fund.panNumber }}</span>
+          </div>
+          <div class="info-row" *ngIf="fund.aadharNumber">
+            <span class="info-label">Aadhar No:</span>
+            <span class="info-value">{{ fund.aadharNumber }}</span>
+          </div>
+          <div class="info-row" *ngIf="fund.address">
+            <span class="info-label">Address:</span>
+            <span class="info-value">{{ fund.address }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: Loan Terms & Bank Details -->
+      <div class="info-card">
+        <div class="card-section-title">
+          <mat-icon>account_balance</mat-icon>
+          <span>Advance Terms & Bank Details</span>
+        </div>
+        <div class="info-rows">
+          <div class="info-row">
+            <span class="info-label">Fund Received Date:</span>
+            <span class="info-value">{{ fund.startDate | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Tenure & Maturity:</span>
+            <span class="info-value">{{ fund.tenureMonths }} Months (Due: {{ fund.maturityDate | date:'dd MMM yyyy' }})</span>
+          </div>
+          <div class="info-row" *ngIf="fund.bankDetails?.bankName">
+            <span class="info-label">Payout Bank:</span>
+            <span class="info-value">{{ fund.bankDetails?.bankName }}</span>
+          </div>
+          <div class="info-row" *ngIf="fund.bankDetails?.accountNumber">
+            <span class="info-label">Account No:</span>
+            <span class="info-value font-mono">{{ fund.bankDetails?.accountNumber }} (IFSC: {{ fund.bankDetails?.ifscCode }})</span>
+          </div>
+          <div class="info-row" *ngIf="fund.bankDetails?.upiId">
+            <span class="info-label">UPI ID:</span>
+            <span class="info-value">{{ fund.bankDetails?.upiId }}</span>
+          </div>
+          <div class="info-row" *ngIf="fund.securityCheque">
+            <span class="info-label">Security Guarantee:</span>
+            <span class="info-value text-purple font-bold">{{ fund.securityCheque }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes if present -->
+    <div class="notes-banner" *ngIf="fund.notes">
+      <mat-icon class="notes-icon">notes</mat-icon>
+      <div>
+        <strong>Notes & Agreement Terms:</strong>
+        <p>{{ fund.notes }}</p>
+      </div>
+    </div>
+
+    <!-- Payout Ledger Table -->
+    <div class="ledger-card">
+      <div class="ledger-header">
+        <div class="lh-left">
+          <mat-icon class="lh-icon">receipt_long</mat-icon>
+          <span class="lh-title">Payout & Repayment Ledger</span>
+          <span class="lh-count">{{ fund.payoutHistory?.length || 0 }} Payouts</span>
+        </div>
+        <button mat-raised-button color="primary" class="lh-add-payout-btn no-print" (click)="openRecordPayout()">
+          <mat-icon>add</mat-icon>
+          <span>Record Payout</span>
+        </button>
+      </div>
+
+      <!-- Empty Ledger State -->
+      <div *ngIf="!fund.payoutHistory || fund.payoutHistory.length === 0" class="empty-ledger">
+        <mat-icon class="empty-ledger-icon">hourglass_empty</mat-icon>
+        <p>No payout transactions recorded yet. Click "Record Payout" to add an interest or principal return payment.</p>
+      </div>
+
+      <!-- Ledger Table -->
+      <div class="ledger-table-wrapper" *ngIf="fund.payoutHistory && fund.payoutHistory.length > 0">
+        <table mat-table [dataSource]="fund.payoutHistory" class="ledger-table">
+
+          <!-- Payout ID -->
+          <ng-container matColumnDef="payoutId">
+            <th mat-header-cell *matHeaderCellDef>Receipt / ID</th>
+            <td mat-cell *matCellDef="let p">
+              <span class="payout-id-tag">{{ p.payoutId }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Date -->
+          <ng-container matColumnDef="payoutDate">
+            <th mat-header-cell *matHeaderCellDef>Payout Date</th>
+            <td mat-cell *matCellDef="let p">
+              {{ p.payoutDate | date:'dd MMM yyyy' }}
+            </td>
+          </ng-container>
+
+          <!-- Payout Type -->
+          <ng-container matColumnDef="type">
+            <th mat-header-cell *matHeaderCellDef>Type</th>
+            <td mat-cell *matCellDef="let p">
+              <span
+                class="payout-type-pill"
+                [class.type-interest]="p.payoutType === 'Interest'"
+                [class.type-principal]="p.payoutType === 'Principal'"
+                [class.type-settlement]="p.payoutType === 'Settlement' || p.payoutType === 'Both'"
+              >
+                {{ p.payoutType }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Amount -->
+          <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>Amount Paid</th>
+            <td mat-cell *matCellDef="let p">
+              <strong class="payout-amt text-green">₹{{ p.amount | number }}</strong>
+              <div class="split-sub" *ngIf="p.principalComponent > 0 && p.interestComponent > 0">
+                P: ₹{{ p.principalComponent | number }} | I: ₹{{ p.interestComponent | number }}
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Payment Mode -->
+          <ng-container matColumnDef="mode">
+            <th mat-header-cell *matHeaderCellDef>Payment Mode</th>
+            <td mat-cell *matCellDef="let p">
+              <span class="mode-badge">{{ p.paymentMode }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Transaction Ref -->
+          <ng-container matColumnDef="ref">
+            <th mat-header-cell *matHeaderCellDef>Ref / UTR / Cheque</th>
+            <td mat-cell *matCellDef="let p">
+              <span class="ref-text">{{ p.transactionRef || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Notes -->
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Notes</th>
+            <td mat-cell *matCellDef="let p">
+              <span class="payout-notes">{{ p.notes || '—' }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Actions -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef class="text-right no-print">Action</th>
+            <td mat-cell *matCellDef="let p" class="text-right no-print">
+              <button
+                mat-icon-button
+                class="del-payout-btn"
+                (click)="deletePayout(p.payoutId || p._id)"
+                title="Delete payout entry"
+              >
+                <mat-icon>delete_outline</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="dialog-footer no-print">
+    <button mat-stroked-button class="close-footer-btn" (click)="close()">
+      Close
+    </button>
+    <button mat-raised-button color="primary" class="primary-payout-btn" (click)="openRecordPayout()">
+      <mat-icon>paid</mat-icon>
+      <span>Record Payout to Investor</span>
+    </button>
+  </div>
+
+</div>

@@ -98,4 +98,18 @@ export class UserProfileService {
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
+
+  isAdmin(): boolean {
+    const profile = this.currentProfile;
+    if (!profile) return false;
+    const role = (profile.role || '').toLowerCase();
+    const email = (profile.email || '').toLowerCase();
+    return (
+      role.includes('admin') ||
+      role.includes('manager') ||
+      role === 'admin' ||
+      email.includes('admin')
+    );
+  }
 }
+

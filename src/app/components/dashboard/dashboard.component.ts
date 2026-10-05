@@ -8,6 +8,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CustomerService } from '../../services/customer.service';
+import { UserProfileService } from '../../services/user-profile.service';
 import { DashboardMetrics, CustomerEntry } from '../../models/customer.model';
 import { CustomerDialogComponent } from '../customer-dialog/customer-dialog.component';
 
@@ -29,10 +30,13 @@ import { CustomerDialogComponent } from '../customer-dialog/customer-dialog.comp
 })
 export class DashboardComponent implements OnInit {
   private customerService = inject(CustomerService);
+  private profileService = inject(UserProfileService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+
+  isAdmin = false;
 
   metrics: DashboardMetrics = {
     totalCustomers: 0,
@@ -57,7 +61,17 @@ export class DashboardComponent implements OnInit {
   currentDate = new Date();
 
   ngOnInit() {
+    this.isAdmin = this.profileService.isAdmin();
+    this.profileService.profile$.subscribe(() => {
+      this.isAdmin = this.profileService.isAdmin();
+      this.cdr.markForCheck();
+    });
+
     this.loadMetrics();
+  }
+
+  navigateToAdvanceLoans() {
+    this.router.navigate(['/advance-loans']);
   }
 
   loadMetrics() {
