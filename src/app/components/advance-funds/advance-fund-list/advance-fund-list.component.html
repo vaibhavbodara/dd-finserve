@@ -1,0 +1,332 @@
+<div class="advance-page-container">
+
+  <!-- Top Hero & Metric Bar -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="breadcrumb">
+        <span>DD Finserve</span>
+        <mat-icon class="bc-arrow">chevron_right</mat-icon>
+        <span class="bc-current">Loan in Advance</span>
+        <span class="admin-pill-badge">Admin Access</span>
+      </div>
+      <h1 class="page-title">Market Funds & Investor Borrowings (Loan in Advance)</h1>
+      <p class="page-subtitle">
+        Manage capital collected from market investors, track interest payout obligations, and monitor repayment ledgers.
+      </p>
+    </div>
+
+    <div class="header-right">
+      <button mat-raised-button color="primary" class="primary-add-btn" (click)="openAddFundDialog()">
+        <mat-icon>add_circle</mat-icon>
+        <span>Add Investor Advance</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Metric Summary Cards -->
+  <div class="metrics-grid">
+    <!-- Card 1: Total Advance Raised -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-purple">
+        <mat-icon>account_balance</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Market Fund Raised</span>
+        <span class="metric-value">₹{{ summary.totalAdvanceFunds | number }}</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Active Investors -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-blue">
+        <mat-icon>handshake</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Active Market Investors</span>
+        <span class="metric-value text-blue">{{ summary.activeInvestorsCount }}</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Total Repaid -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-green">
+        <mat-icon>payments</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Payouts Returned</span>
+        <span class="metric-value text-green">₹{{ summary.totalPaid | number }}</span>
+        <span class="metric-subtext">
+          Principal: ₹{{ summary.totalPrincipalRepaid | number }} | Int: ₹{{ summary.totalInterestPaid | number }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Card 4: Net Outstanding Principal -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-amber">
+        <mat-icon>hourglass_bottom</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Net Outstanding Principal</span>
+        <span class="metric-value text-amber">₹{{ summary.netOutstandingPrincipal | number }}</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Monthly Interest Obligation -->
+    <div class="metric-card">
+      <div class="metric-icon-box bg-rose">
+        <mat-icon>trending_up</mat-icon>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Monthly Interest Liability</span>
+        <span class="metric-value text-rose">₹{{ summary.monthlyInterestObligation | number }}/mo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters & Search Controls -->
+  <div class="controls-card">
+    <div class="controls-grid">
+      <!-- Search Input -->
+      <div class="search-field-wrapper">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          type="text"
+          class="custom-search-input"
+          placeholder="Search by Investor Name, Mobile, Fund ID, PAN..."
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilters()"
+        />
+        <button *ngIf="searchTerm" mat-icon-button class="clear-search-btn" (click)="searchTerm = ''; applyFilters()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-dropdown">
+        <label class="filter-label">Status:</label>
+        <select class="custom-select" [(ngModel)]="selectedStatus" (ngModelChange)="applyFilters()">
+          <option value="All">All Statuses</option>
+          <option value="Active">Active</option>
+          <option value="Matured">Matured</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+
+      <!-- Frequency Filter -->
+      <div class="filter-dropdown">
+        <label class="filter-label">Payout Cycle:</label>
+        <select class="custom-select" [(ngModel)]="selectedFrequency" (ngModelChange)="applyFilters()">
+          <option value="All">All Frequencies</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Yearly">Yearly</option>
+          <option value="At Maturity">At Maturity</option>
+        </select>
+      </div>
+
+      <!-- Refresh Button -->
+      <button mat-stroked-button class="refresh-btn" (click)="loadFunds()" [disabled]="isLoading">
+        <mat-icon [class.spinning]="isLoading">refresh</mat-icon>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Table Card -->
+  <div class="table-container-card">
+    <div class="table-header-bar">
+      <div class="th-left">
+        <span class="th-title">Investor Advance Funds</span>
+        <span class="count-badge">{{ filteredFunds.length }} records</span>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <mat-icon class="spinning">sync</mat-icon>
+      <span>Loading Advance Fund portfolio...</span>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredFunds.length === 0" class="empty-state">
+      <mat-icon class="empty-icon">account_balance_wallet</mat-icon>
+      <h3>No Advance Loan / Market Fund Records Found</h3>
+      <p>Click "Add Investor Advance" to record capital collected from market investors.</p>
+      <button mat-raised-button color="primary" (click)="openAddFundDialog()">
+        <mat-icon>add</mat-icon> Add First Record
+      </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="responsive-table-wrapper" *ngIf="!isLoading && filteredFunds.length > 0">
+      <table mat-table [dataSource]="filteredFunds" class="advance-table">
+
+        <!-- Code Column -->
+        <ng-container matColumnDef="fundCode">
+          <th mat-header-cell *matHeaderCellDef>Fund ID</th>
+          <td mat-cell *matCellDef="let fund">
+            <span class="fund-code-tag">{{ fund.fundCode }}</span>
+            <div class="start-date-sub">{{ fund.startDate | date:'dd MMM yyyy' }}</div>
+          </td>
+        </ng-container>
+
+        <!-- Investor Column -->
+        <ng-container matColumnDef="investor">
+          <th mat-header-cell *matHeaderCellDef>Investor Details</th>
+          <td mat-cell *matCellDef="let fund">
+            <div class="investor-name-cell">
+              <span class="investor-name">{{ fund.investorName }}</span>
+              <div class="investor-contact">
+                <mat-icon class="tiny-icon">phone</mat-icon>
+                <span>{{ fund.mobileNumber }}</span>
+                <span *ngIf="fund.panNumber" class="pan-pill">{{ fund.panNumber }}</span>
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Amount Borrowed Column -->
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Advance Amount</th>
+          <td mat-cell *matCellDef="let fund">
+            <div class="amount-cell">
+              <span class="principal-amt">₹{{ fund.amountInvested | number }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Interest Rate & Obligation Column -->
+        <ng-container matColumnDef="interest">
+          <th mat-header-cell *matHeaderCellDef>Interest Terms</th>
+          <td mat-cell *matCellDef="let fund">
+            <div class="interest-rate-tag">
+              {{ fund.interestRate }}% {{ fund.interestRateBasis }}
+            </div>
+            <div class="interest-amount-sub">
+              ₹{{ fund.monthlyInterestAmount | number }}/mo ({{ fund.payoutFrequency }})
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Tenure & Maturity Column -->
+        <ng-container matColumnDef="tenure">
+          <th mat-header-cell *matHeaderCellDef>Tenure & Maturity</th>
+          <td mat-cell *matCellDef="let fund">
+            <div class="tenure-cell">
+              <span class="tenure-badge">{{ fund.tenureMonths }} Months</span>
+              <div class="maturity-sub" *ngIf="fund.maturityDate">
+                Due: {{ fund.maturityDate | date:'dd MMM yyyy' }}
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Repayment / Paid Column -->
+        <ng-container matColumnDef="repayment">
+          <th mat-header-cell *matHeaderCellDef>Total Paid Back</th>
+          <td mat-cell *matCellDef="let fund">
+            <div class="repaid-cell">
+              <span class="repaid-amt text-green">₹{{ (fund.totalPaid || 0) | number }}</span>
+              <div class="payout-count-sub">
+                {{ fund.payoutHistory?.length || 0 }} payouts done
+              </div>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Remaining Principal Column -->
+        <ng-container matColumnDef="remaining">
+          <th mat-header-cell *matHeaderCellDef>Outstanding Balance</th>
+          <td mat-cell *matCellDef="let fund">
+            <span class="outstanding-amt" [class.text-amber]="(fund.remainingPrincipal || 0) > 0" [class.text-muted]="(fund.remainingPrincipal || 0) <= 0">
+              ₹{{ (fund.remainingPrincipal || 0) | number }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let fund">
+            <span
+              class="status-chip-badge"
+              [class.status-active]="fund.status === 'Active'"
+              [class.status-matured]="fund.status === 'Matured'"
+              [class.status-closed]="fund.status === 'Closed'"
+            >
+              {{ fund.status }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="text-right">Actions</th>
+          <td mat-cell *matCellDef="let fund" class="text-right">
+            <div class="action-btn-group">
+              <!-- Quick Payout Button -->
+              <button
+                mat-stroked-button
+                class="btn-quick-payout"
+                (click)="openRecordPayoutDialog(fund)"
+                title="Record Interest or Principal Payout"
+              >
+                <mat-icon>paid</mat-icon>
+                <span>Payout</span>
+              </button>
+
+              <!-- View Details / Ledger Button -->
+              <button
+                mat-icon-button
+                class="btn-icon-action text-blue"
+                (click)="openDetailDialog(fund)"
+                matTooltip="View Complete Ledger & Details"
+              >
+                <mat-icon>receipt_long</mat-icon>
+              </button>
+
+              <!-- Edit Button -->
+              <button
+                mat-icon-button
+                class="btn-icon-action text-amber"
+                (click)="openEditFundDialog(fund)"
+                matTooltip="Edit Investor Details"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+
+              <!-- More Menu -->
+              <button mat-icon-button [matMenuTriggerFor]="fundMenu" class="btn-icon-action text-slate">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #fundMenu="matMenu">
+                <button mat-menu-item (click)="openDetailDialog(fund)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>View Full Details & Bank Info</span>
+                </button>
+                <button mat-menu-item (click)="openRecordPayoutDialog(fund)">
+                  <mat-icon>payments</mat-icon>
+                  <span>Record Payout to Investor</span>
+                </button>
+                <button mat-menu-item (click)="openEditFundDialog(fund)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Edit Investor Information</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteFund(fund)" class="text-red">
+                  <mat-icon color="warn">delete</mat-icon>
+                  <span class="text-red">Delete Record</span>
+                </button>
+              </mat-menu>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="table-row"></tr>
+      </table>
+    </div>
+  </div>
+
+</div>

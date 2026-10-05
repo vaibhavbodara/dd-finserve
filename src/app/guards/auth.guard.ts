@@ -22,3 +22,16 @@ export const guestGuard: CanActivateFn = () => {
   }
   return true;
 };
+
+export const adminGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isLoggedIn() && authService.isAdmin()) {
+    return true;
+  }
+
+  // If not admin, redirect to dashboard
+  return router.createUrlTree(['/dashboard']);
+};
+

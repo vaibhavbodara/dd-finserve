@@ -34,6 +34,8 @@ app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/loans', require('./routes/loanRoutes'));
 app.use('/api/collections', require('./routes/collectionRoutes'));
+app.use('/api/advance-funds', require('./routes/advanceFundRoutes'));
+app.use('/api/investors', require('./routes/advanceFundRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

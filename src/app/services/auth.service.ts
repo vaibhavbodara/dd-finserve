@@ -54,6 +54,10 @@ export class AuthService {
     return this.isLoggedInSubject.getValue();
   }
 
+  isAdmin(): boolean {
+    return this.profileService.isAdmin();
+  }
+
   get currentUser(): UserProfile | null {
     return this.currentUserSubject.getValue();
   }
