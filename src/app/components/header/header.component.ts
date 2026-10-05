@@ -50,6 +50,7 @@ export class HeaderComponent implements OnInit {
 
   profile: UserProfile = this.profileService.currentProfile;
   initials = 'VB';
+  isAdmin = false;
 
   ngOnInit() {
     this.checkHealth();
@@ -57,6 +58,7 @@ export class HeaderComponent implements OnInit {
     this.profileService.profile$.subscribe((p) => {
       this.profile = p;
       this.initials = this.profileService.getInitials(p.name);
+      this.isAdmin = this.profileService.isAdmin();
       this.cdr.markForCheck();
       this.cdr.detectChanges();
     });

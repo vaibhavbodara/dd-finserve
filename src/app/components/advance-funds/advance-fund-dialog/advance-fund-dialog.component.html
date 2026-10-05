@@ -1,0 +1,231 @@
+<div class="fund-dialog-container">
+
+  <!-- Header Banner -->
+  <div class="dialog-header">
+    <div class="header-title-box">
+      <div class="header-icon-box">
+        <mat-icon>{{ isEditMode ? 'edit_note' : 'add_business' }}</mat-icon>
+      </div>
+      <div>
+        <h2 class="dialog-title">{{ isEditMode ? 'Edit Advance Loan & Investor' : 'New Advance Loan (Market Fund)' }}</h2>
+        <p class="dialog-subtitle">Record borrowed capital from market investor, interest rate, and terms</p>
+      </div>
+    </div>
+    <button mat-icon-button class="close-btn" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Form Body -->
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form-body">
+
+    <!-- Section 1: Investor Identification -->
+    <div class="form-section-title">
+      <mat-icon>badge</mat-icon>
+      <span>1. Investor / Fund Provider Details</span>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Investor Full Name *</mat-label>
+        <input matInput formControlName="investorName" placeholder="e.g. Rameshchandra Patel" />
+        <mat-icon matPrefix>person</mat-icon>
+        <mat-error *ngIf="form.get('investorName')?.hasError('required')">Name is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Mobile Number *</mat-label>
+        <input matInput formControlName="mobileNumber" placeholder="e.g. 9825123456" />
+        <mat-icon matPrefix>phone</mat-icon>
+        <mat-error *ngIf="form.get('mobileNumber')?.hasError('required')">Mobile number is required</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Email Address</mat-label>
+        <input matInput formControlName="email" type="email" placeholder="e.g. investor@gmail.com" />
+        <mat-icon matPrefix>email</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>PAN Card Number</mat-label>
+        <input matInput formControlName="panNumber" placeholder="e.g. ABCDE1234F" style="text-transform: uppercase;" />
+        <mat-icon matPrefix>credit_card</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Aadhar / Identification No</mat-label>
+        <input matInput formControlName="aadharNumber" placeholder="e.g. 1234 5678 9012" />
+        <mat-icon matPrefix>fingerprint</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Residential Address / City</mat-label>
+        <input matInput formControlName="address" placeholder="e.g. Katargam, Surat" />
+        <mat-icon matPrefix>home</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Section 2: Loan in Advance / Fund Terms -->
+    <div class="form-section-title">
+      <mat-icon>account_balance</mat-icon>
+      <span>2. Advance Fund & Interest Terms</span>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Advance Amount Borrowed (₹) *</mat-label>
+        <input matInput type="number" formControlName="amountInvested" placeholder="500000" min="1000" />
+        <span matPrefix class="prefix-symbol">₹&nbsp;</span>
+        <mat-error *ngIf="form.get('amountInvested')?.hasError('required')">Amount is required</mat-error>
+      </mat-form-field>
+
+      <div class="rate-basis-row">
+        <mat-form-field appearance="outline" class="rate-field">
+          <mat-label>Interest Rate (%) *</mat-label>
+          <input matInput type="number" step="0.1" formControlName="interestRate" placeholder="1.5" />
+          <span matSuffix class="suffix-symbol">%</span>
+          <mat-error *ngIf="form.get('interestRate')?.hasError('required')">Required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="basis-field">
+          <mat-label>Rate Period</mat-label>
+          <mat-select formControlName="interestRateBasis">
+            <mat-option value="Monthly">Per Month</mat-option>
+            <mat-option value="Yearly">Per Year</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="form-row three-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Payout Frequency</mat-label>
+        <mat-select formControlName="payoutFrequency">
+          <mat-option value="Monthly">Monthly</mat-option>
+          <mat-option value="Quarterly">Quarterly</mat-option>
+          <mat-option value="Yearly">Yearly</mat-option>
+          <mat-option value="At Maturity">At Maturity</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>schedule</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fund Received Date *</mat-label>
+        <input matInput type="date" formControlName="startDate" />
+        <mat-icon matPrefix>event</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Tenure (Months) *</mat-label>
+        <input matInput type="number" formControlName="tenureMonths" placeholder="12" min="1" />
+        <mat-icon matPrefix>timelapse</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Live Financial Projection Card -->
+    <div class="projection-banner">
+      <div class="proj-col">
+        <span class="proj-label">Monthly Interest</span>
+        <span class="proj-val text-rose">₹{{ calculatedMonthlyInterest | number }}</span>
+      </div>
+      <div class="proj-divider"></div>
+      <div class="proj-col">
+        <span class="proj-label">Total Expected Interest</span>
+        <span class="proj-val text-purple">₹{{ calculatedTotalInterest | number }}</span>
+      </div>
+      <div class="proj-divider"></div>
+      <div class="proj-col">
+        <span class="proj-label">Estimated Maturity</span>
+        <span class="proj-val text-blue">{{ maturityDatePreview || '—' }}</span>
+      </div>
+    </div>
+
+    <!-- Section 3: Bank Details for Payouts -->
+    <div class="form-section-title">
+      <mat-icon>account_balance_wallet</mat-icon>
+      <span>3. Investor Bank Account Details (For Payout Transfers)</span>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Bank Name</mat-label>
+        <input matInput formControlName="bankName" placeholder="e.g. State Bank of India / HDFC" />
+        <mat-icon matPrefix>storefront</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Account Holder Name</mat-label>
+        <input matInput formControlName="accountHolderName" placeholder="As per passbook" />
+        <mat-icon matPrefix>badge</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div class="form-row three-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Account Number</mat-label>
+        <input matInput formControlName="accountNumber" placeholder="e.g. 5010023491823" />
+        <mat-icon matPrefix>numbers</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>IFSC Code</mat-label>
+        <input matInput formControlName="ifscCode" placeholder="e.g. SBIN0001234" style="text-transform: uppercase;" />
+        <mat-icon matPrefix>domain</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>UPI ID (Optional)</mat-label>
+        <input matInput formControlName="upiId" placeholder="e.g. ramesh@okaxis" />
+        <mat-icon matPrefix>qr_code_scanner</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Section 4: Security & Notes -->
+    <div class="form-section-title">
+      <mat-icon>verified_user</mat-icon>
+      <span>4. Guarantee / Security & Notes</span>
+    </div>
+
+    <div class="form-row two-col">
+      <mat-form-field appearance="outline">
+        <mat-label>Security Cheque / Agreement Details</mat-label>
+        <input matInput formControlName="securityCheque" placeholder="e.g. Cheque # 104921 handed over as guarantee" />
+        <mat-icon matPrefix>security</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Fund Status</mat-label>
+        <mat-select formControlName="status">
+          <mat-option value="Active">Active</mat-option>
+          <mat-option value="Matured">Matured</mat-option>
+          <mat-option value="Closed">Closed</mat-option>
+        </mat-select>
+        <mat-icon matPrefix>flag</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="w-100">
+      <mat-label>Additional Notes / Terms</mat-label>
+      <textarea matInput formControlName="notes" rows="2" placeholder="Any special arrangements or terms..."></textarea>
+      <mat-icon matPrefix>note</mat-icon>
+    </mat-form-field>
+
+  </form>
+
+  <!-- Dialog Actions -->
+  <div class="dialog-actions">
+    <button mat-button class="cancel-btn" (click)="close()" [disabled]="isSaving">
+      Cancel
+    </button>
+    <button mat-raised-button color="primary" class="save-btn" (click)="save()" [disabled]="isSaving">
+      <mat-icon *ngIf="!isSaving">{{ isEditMode ? 'check' : 'add' }}</mat-icon>
+      <mat-icon *ngIf="isSaving" class="spinning">sync</mat-icon>
+      <span>{{ isSaving ? 'Saving...' : (isEditMode ? 'Update Record' : 'Save Advance Fund') }}</span>
+    </button>
+  </div>
+
+</div>

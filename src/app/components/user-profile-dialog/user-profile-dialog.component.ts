@@ -33,6 +33,7 @@ export class UserProfileDialogComponent implements OnInit {
   initials = 'VB';
 
   roles: string[] = [
+    'Admin',
     'Branch Manager & Administrator',
     'Senior Loan Officer',
     'Field Collection Agent',

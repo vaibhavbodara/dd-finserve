@@ -299,6 +299,16 @@
           </div>
           <mat-icon class="arrow-icon">arrow_forward</mat-icon>
         </button>
+
+        <!-- Admin Only Shortcut: Loan in Advance -->
+        <button *ngIf="isAdmin" mat-flat-button class="shortcut-btn btn-advance" (click)="navigateToAdvanceLoans()">
+          <mat-icon class="text-purple">account_balance</mat-icon>
+          <div class="btn-text-group">
+            <span class="btn-primary-text">Loan in Advance (Market Funds & Investors) <span class="shortcut-admin-tag">Admin</span></span>
+            <span class="btn-sec-text">Manage funds borrowed from market & track investor payout obligations</span>
+          </div>
+          <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+        </button>
       </div>
     </div>
 
